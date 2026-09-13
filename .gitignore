@@ -206,6 +206,13 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
+# except the frontend workspace's packages/ (packages/ui, packages/api-client, packages/i18n) —
+# this is npm workspace source, not a NuGet restore folder. Each must be negated by its
+# exact path: negating the parent /packages/ alone doesn't work, since git won't descend
+# into a directory whose own entry still matches an earlier exclude pattern.
+!/packages/ui/
+!/packages/api-client/
+!/packages/i18n/
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
@@ -482,3 +489,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Frontend (Vite/TS)
+dist/
+.vite/
+*.tsbuildinfo

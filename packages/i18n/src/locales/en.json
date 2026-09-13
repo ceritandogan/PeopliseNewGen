@@ -1,0 +1,114 @@
+{
+  "common": {
+    "appName": "Peoplise",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "search": "Search",
+    "filter": "Filter",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "somethingWentWrong": "Something went wrong.",
+    "noResults": "No results found."
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "sessionExpired": "Your session has expired. Please sign in again."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "positions": "Positions",
+    "pipeline": "Candidate Pipeline",
+    "settings": "Settings"
+  },
+  "header": {
+    "selectTenant": "Select workspace",
+    "language": "Language",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "openPositions": "Open positions",
+    "candidateDistribution": "Candidate distribution",
+    "totalApplicants": "Total applicants"
+  },
+  "positions": {
+    "title": "Positions",
+    "newPosition": "New position",
+    "department": "Department",
+    "location": "Location",
+    "workMode": "Work mode",
+    "seniority": "Seniority",
+    "employmentType": "Employment type",
+    "team": "Hiring team",
+    "flowEditor": "Flow editor",
+    "addStage": "Add stage",
+    "workMode_office": "Office",
+    "workMode_remote": "Remote",
+    "workMode_hybrid": "Hybrid"
+  },
+  "pipeline": {
+    "title": "Candidate Pipeline",
+    "newApplication": "New Application",
+    "underReview": "Under Review",
+    "testing": "Testing",
+    "interviewing": "Interviewing",
+    "offer": "Offer",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "eliminated": "Eliminated",
+    "timedOut": "Timed Out"
+  },
+  "candidateDetail": {
+    "profile": "Profile",
+    "evaluations": "Evaluations",
+    "timeline": "Timeline",
+    "notes": "Notes",
+    "addNote": "Add a note",
+    "privateNote": "Private note",
+    "videoAnswer": "Video answer",
+    "resume": "Resume"
+  },
+  "bot": {
+    "typeYourAnswer": "Type your answer…",
+    "send": "Send",
+    "thinking": "Typing…"
+  },
+  "videoInterview": {
+    "title": "Video Interview",
+    "cameraPreview": "Camera preview",
+    "microphoneCheck": "Microphone check",
+    "preparationTime": "Preparation time",
+    "recordingTime": "Recording time",
+    "startRecording": "Start recording",
+    "stopRecording": "Stop recording",
+    "retake": "Retake",
+    "retakesRemaining": "{{count}} retake remaining",
+    "retakesRemaining_other": "{{count}} retakes remaining",
+    "noRetakesLeft": "No retakes left"
+  },
+  "survey": {
+    "title": "Assessment",
+    "questionOf": "Question {{current}} of {{total}}",
+    "multipleChoice": "Choose one option",
+    "matrix": "Rate each item",
+    "ranking": "Drag to rank",
+    "fillInTheBlank": "Fill in the blank",
+    "submitAnswer": "Submit answer"
+  },
+  "errors": {
+    "notFound": "Page not found.",
+    "unauthorized": "You don't have access to this page.",
+    "networkError": "Couldn't reach the server. Check your connection and try again."
+  }
+}

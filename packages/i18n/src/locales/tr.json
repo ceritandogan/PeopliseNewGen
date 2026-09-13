@@ -1,0 +1,114 @@
+{
+  "common": {
+    "appName": "Peoplise",
+    "save": "Kaydet",
+    "cancel": "Vazgeç",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "add": "Ekle",
+    "close": "Kapat",
+    "loading": "Yükleniyor…",
+    "retry": "Tekrar dene",
+    "search": "Ara",
+    "filter": "Filtrele",
+    "back": "Geri",
+    "next": "İleri",
+    "submit": "Gönder",
+    "confirm": "Onayla",
+    "somethingWentWrong": "Bir şeyler ters gitti.",
+    "noResults": "Sonuç bulunamadı."
+  },
+  "auth": {
+    "signIn": "Giriş yap",
+    "signOut": "Çıkış yap",
+    "email": "E-posta",
+    "password": "Şifre",
+    "sessionExpired": "Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın."
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "positions": "Pozisyonlar",
+    "pipeline": "Aday Pipeline",
+    "settings": "Ayarlar"
+  },
+  "header": {
+    "selectTenant": "Çalışma alanı seç",
+    "language": "Dil",
+    "profile": "Profil"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "openPositions": "Açık pozisyonlar",
+    "candidateDistribution": "Aday dağılımı",
+    "totalApplicants": "Toplam başvuru"
+  },
+  "positions": {
+    "title": "Pozisyonlar",
+    "newPosition": "Yeni pozisyon",
+    "department": "Departman",
+    "location": "Lokasyon",
+    "workMode": "Çalışma modeli",
+    "seniority": "Kıdem",
+    "employmentType": "Pozisyon tipi",
+    "team": "İşe alım ekibi",
+    "flowEditor": "Akış editörü",
+    "addStage": "Aşama ekle",
+    "workMode_office": "Ofis",
+    "workMode_remote": "Uzaktan",
+    "workMode_hybrid": "Hibrit"
+  },
+  "pipeline": {
+    "title": "Aday Pipeline",
+    "newApplication": "Yeni Başvuru",
+    "underReview": "İncelemede",
+    "testing": "Test",
+    "interviewing": "Mülakat",
+    "offer": "Teklif",
+    "accepted": "Kabul",
+    "rejected": "Red",
+    "eliminated": "Elendi",
+    "timedOut": "Zaman Aşımı"
+  },
+  "candidateDetail": {
+    "profile": "Profil",
+    "evaluations": "Değerlendirmeler",
+    "timeline": "Zaman çizelgesi",
+    "notes": "Notlar",
+    "addNote": "Not ekle",
+    "privateNote": "Gizli not",
+    "videoAnswer": "Video yanıt",
+    "resume": "Özgeçmiş"
+  },
+  "bot": {
+    "typeYourAnswer": "Yanıtınızı yazın…",
+    "send": "Gönder",
+    "thinking": "Yazıyor…"
+  },
+  "videoInterview": {
+    "title": "Video Mülakat",
+    "cameraPreview": "Kamera önizleme",
+    "microphoneCheck": "Mikrofon kontrolü",
+    "preparationTime": "Düşünme süresi",
+    "recordingTime": "Kayıt süresi",
+    "startRecording": "Kaydı başlat",
+    "stopRecording": "Kaydı durdur",
+    "retake": "Tekrar çek",
+    "retakesRemaining": "{{count}} tekrar çekim hakkı kaldı",
+    "retakesRemaining_other": "{{count}} tekrar çekim hakkı kaldı",
+    "noRetakesLeft": "Tekrar çekim hakkınız kalmadı"
+  },
+  "survey": {
+    "title": "Değerlendirme",
+    "questionOf": "Soru {{current}} / {{total}}",
+    "multipleChoice": "Bir seçenek belirleyin",
+    "matrix": "Her birini puanlayın",
+    "ranking": "Sıralamak için sürükleyin",
+    "fillInTheBlank": "Boşluğu doldurun",
+    "submitAnswer": "Yanıtı gönder"
+  },
+  "errors": {
+    "notFound": "Sayfa bulunamadı.",
+    "unauthorized": "Bu sayfaya erişim yetkiniz yok.",
+    "networkError": "Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin."
+  }
+}
