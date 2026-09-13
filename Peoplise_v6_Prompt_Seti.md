@@ -11,17 +11,18 @@
 | Karar Alanı | Tercih |
 |---|---|
 | **.NET Sürümü** | .NET 9 |
-| **Veritabanı** | DB-agnostic (PostgreSQL + MSSQL desteği, EF Core) |
+| **Veritabanı** | PostgreSQL (EF Core). Repository/UnitOfWork katmanı ince tutulacak; farklı bir sağlayıcıya geçiş ileride mümkün olsun diye soyutlanır, ama şimdilik ikinci bir sağlayıcı aktif olarak desteklenmez/test edilmez. |
 | **Multi-Tenancy** | Paylaşımlı DB, TenantId Global Query Filter |
-| **Mesaj Kuyruğu** | RabbitMQ (MassTransit üzerinden) |
+| **Modüller Arası İletişim** | In-process (MediatR notification / domain event). RabbitMQ/MassTransit + Outbox **MVP'de yok** — somut bir yatay ölçekleme ihtiyacı doğduğunda ayrı bir aşamada eklenecek. |
 | **Dosya Depolama** | Soyut katman (Azure Blob, S3, MinIO desteği) |
 | **AI / LLM** | Strategy Pattern (Azure OpenAI, OpenAI, Claude) |
-| **Kimlik Doğrulama** | Custom JWT Token altyapısı |
+| **Kimlik Doğrulama** | Kanıtlanmış kütüphane/servis (Duende IdentityServer, OpenIddict, ya da Auth0/Clerk gibi hosted bir çözüm) — JWT altyapısı sıfırdan yazılmayacak. |
 | **Frontend** | React + TypeScript |
 | **Lokalizasyon** | Türkçe + İngilizce (i18n) |
 | **Ekip Büyüklüğü** | 1–3 geliştirici (küçük ekip) |
 | **MVP Kapsamı** | ATS + İK Botu + Video Mülakat (3 çekirdek modül) |
-| **Zorunlu Entegrasyonlar** | Logo JHR, SAP SuccessFactors, MS Teams/Graph, Facebook Messenger |
+| **Zorunlu Entegrasyonlar** | İlk pilot müşterinin gerçekten ihtiyaç duyduğu **tek** entegrasyon MVP kapsamına alınacak (Logo JHR / SAP SuccessFactors / MS Teams-Graph arasından seçilecek); diğerleri ve Facebook Messenger kanalı MVP sonrasına ertelendi. |
+| **Veri Saklama / Silme (KVKK)** | Aday video/doküman/PII için saklama süresi ve rıza geri çekildiğinde silme/anonimleştirme akışı tanımlanacak (bkz. Aşama 4). |
 | **Dağıtım** | Henüz kesinleşmedi (konteyner-ready hazırlanacak) |
 | **Veri Göçü** | Mevcut v4/v5 veritabanından migration gerekecek |
 | **Ölçek** | 50–200 eş zamanlı kullanıcı |
@@ -43,17 +44,25 @@ KESİNLEŞEN MİMARİ KARARLAR
 • Mimari Desen: Clean Architecture + DDD prensiplerine dayalı Modular Monolith
   (İleride mikroservise bölünebilecek gevşek bağlı modüller).
 • CQRS: MediatR ile Command/Query ayrımı.
-• Event-Driven: MassTransit + RabbitMQ, modüller arası Outbox Pattern.
-• Veritabanı: EF Core 9 — DB-agnostic (hem PostgreSQL hem MSSQL desteği).
+• Modüller Arası İletişim: MediatR ile in-process domain event / notification yayını
+  (INotificationHandler). RabbitMQ/MassTransit + Outbox Pattern MVP'de YOK — somut
+  bir yatay ölçekleme/çoklu-instance ihtiyacı doğduğunda ayrı bir aşamada eklenecek.
+• Veritabanı: EF Core 9 — PostgreSQL. Repository/UnitOfWork soyutlaması ince tutulacak
+  (ileride farklı bir sağlayıcıya geçiş mümkün olsun diye), ama şimdilik tek sağlayıcı
+  aktif geliştirilip test edilecek.
   Multi-tenancy: Paylaşımlı DB, TenantId ile Global Query Filters.
   Full Audit Trail: CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted (Soft Delete).
-• Kimlik Doğrulama: Custom JWT token tabanlı auth sistemi (Access + Refresh Token).
+• Kimlik Doğrulama: Kanıtlanmış bir kütüphane/servis entegrasyonu (Duende IdentityServer
+  veya OpenIddict, ya da Auth0/Clerk gibi hosted bir çözüm). Token üretimi, refresh
+  rotation ve revocation sıfırdan yazılmayacak.
 • Dosya Depolama: Soyut IFileStorageService (Azure Blob, S3, MinIO uyumlu).
 • AI/LLM Soyutlaması: Strategy Pattern ile IAIProvider (Azure OpenAI, OpenAI, Claude).
 • Dayanıklılık: Polly ile Circuit Breaker, Retry, Timeout politikaları.
 • Önbellekleme: IDistributedCache (Redis veya InMemory).
 • Gözlemlenebilirlik: Serilog (Structured Logging), OpenTelemetry, Health Checks.
-• Test Altyapısı: xUnit + FluentAssertions + NSubstitute. Hedef: %85+ kod kapsamı.
+• Test Altyapısı: xUnit + FluentAssertions + NSubstitute. Hedef: kapsam yüzdesi değil,
+  her aşamanın "UNIT TESTLER" bölümünde listelenen davranış ve kuralların eksiksiz
+  test edilmesi.
 • Lokalizasyon: Türkçe + İngilizce (i18n).
 • Ekip: 1-3 kişi (küçük ekip için sürdürülebilir karmaşıklık seviyesi).
 • MVP Kapsamı: ATS Workflow + İK Botu + Video Mülakat.
@@ -78,10 +87,12 @@ Projenin temel iskeletini ve Shared Kernel katmanını eksiksiz oluştur:
    - Sayfalama: PagedRequest<T> ve PagedResult<T>.
 
 3. INFRASTRUCTURE KATMANI (Peoplise.Infrastructure)
-   - AppDbContext: Multi-tenant Global Query Filter + Audit interceptor entegrasyonu.
+   - AppDbContext: Multi-tenant Global Query Filter + Audit interceptor entegrasyonu (PostgreSQL).
    - GenericRepository<T> implementasyonu.
-   - Custom JWT token üretim ve doğrulama servisleri (JwtTokenService, RefreshTokenService).
-   - Outbox Pattern: OutboxMessage entity, OutboxPublisher (MassTransit).
+   - Auth entegrasyonu: Seçilen kütüphane/servisin (Duende IdentityServer / OpenIddict /
+     Auth0 / Clerk) konfigürasyonu, claim mapping, tenant ve rol bilgisinin token'a eklenmesi.
+   - Domain Event Dispatch: DomainEventDispatcher'ın MediatR INotification olarak
+     yayınlanması (in-process, aynı transaction/scope içinde çalışan handler'lar).
    - IFileStorageService soyutlama + Azure Blob implementasyonu.
 
 4. API GATEWAY (Peoplise.Api)
@@ -96,8 +107,9 @@ Projenin temel iskeletini ve Shared Kernel katmanını eksiksiz oluştur:
    - Result<T> ve ValueObject eşitlik testleri.
    - TenantInterceptor'ın TenantId'yi doğru set ettiğini doğrulayan test.
    - AuditInterceptor'ın CreatedAt/UpdatedAt alanlarını doldurduğunu doğrulayan test.
-   - JwtTokenService'in token üretim ve validasyon testleri.
-   - Outbox mesajının doğru serialize edildiğini doğrulayan test.
+   - Auth entegrasyonunun claim/tenant mapping testleri.
+   - Domain event dispatch testi: bir event raise edildiğinde ilgili handler'ın
+     tetiklendiğinin doğrulanması.
 
 KURALLAR:
 • Kod üretim kalitesinde (production-ready) olacak; TODO, placeholder veya stub bırakma.
@@ -248,9 +260,11 @@ D. Bilgi Bankası ve SSS (Knowledgebase)
   bulunursa yanıtlanır. Eşleşme yoksa soru loglanır (İK ekibinin görmesi için).
 
 E. Çok Kanallı Destek (Omnichannel)
-• Web Chat (Ana kanal): Adaya gönderilen link ile tarayıcıda açılan sohbet penceresi.
-• Facebook Messenger: Sosyal medya üzerinden bot ile etkileşim.
-• Kanal bilgisi ConversationInterface enum ile saklanır.
+• Web Chat (Ana kanal, MVP): Adaya gönderilen link ile tarayıcıda açılan sohbet penceresi.
+• Facebook Messenger (MVP sonrası, opsiyonel): Sosyal medya üzerinden bot ile etkileşim —
+  pilot müşteri ihtiyacı netleşene kadar ertelendi.
+• Kanal bilgisi ConversationInterface enum ile saklanır (MVP sonrası kanallar için de
+  genişletilebilir tasarlanır).
 
 F. Konuşma Geçmişi ve İzleme (Conversation Logs)
 • Adım adım tüm konuşma akışı loglanır (CaseStepLog).
@@ -336,6 +350,17 @@ F. Kod Değerlendirme (Software Development Question & AI Code Review)
   Okunabilirlik, İşlevsellik, Veri Doğrulama, Kullanım Senaryosu, Sözdizimi.
   Her kategori 20 üzerinden, toplam 100 puan.
 
+G. Veri Saklama ve Silme (KVKK)
+• Her CaseBotProject için varsayılan bir saklama süresi (retention period) tanımlanır;
+  süre dolduğunda video/doküman dosyaları ve transkriptler otomatik olarak silinir
+  (zamanlanmış arka plan işi).
+• Aday, süreç sırasında veya tamamlandıktan sonra rızasını geri çekebilir (consent
+  withdrawal): bu durumda video/doküman dosyaları silinir; puanlama ve rapor kayıtları
+  anonimleştirilir (aday kimliği koparılır, istatistiksel veri korunur).
+• Silme/anonimleştirme, IFileStorageService üzerinden fiziksel dosya silme + veritabanında
+  soft-delete/anonymize kombinasyonu ile yapılır; işlemin kim tarafından ve ne zaman
+  tetiklendiği audit trail'e yazılır.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SENDEN BEKLENEN ÇIKTILAR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -346,15 +371,21 @@ SENDEN BEKLENEN ÇIKTILAR
    Competency, CompetencyLevel, BehavioralIndicator, CaseStepConversation,
    CaseScoring, CaseResult, CompetencyResult, Report, ReportTemplate.
    Domain Event'ler: CaseStartedEvent, CaseCompletedEvent,
-   VideoRecordedEvent (AI transkripsiyon tetikleyicisi), ScoringSubmittedEvent.
+   VideoRecordedEvent (AI transkripsiyon tetikleyicisi), ScoringSubmittedEvent,
+   ConsentWithdrawnEvent, DataRetentionExpiredEvent.
 
 2. APPLICATION KATMANI
    Commands: CreateCaseBotProjectCommand, StartCandidateCaseCommand,
    SubmitVideoAnswerCommand (dosya depolama + arka plan transkripsiyon tetikleme),
-   SubmitReviewerScoringCommand, RequestAICodeReviewCommand.
+   SubmitReviewerScoringCommand, RequestAICodeReviewCommand,
+   RequestDataDeletionCommand (rıza geri çekme / saklama süresi dolması durumunda).
    Queries: GetCaseReportQuery, GetCandidateComparisonQuery.
-   Background Job (MassTransit Consumer): VideoTranscriptionRequestedEvent
-   → IAIProvider.TranscribeAsync → TranscriptionCompletedEvent.
+   Arka Plan İşi (in-process hosted service veya basit bir job scheduler —
+   RabbitMQ/MassTransit gerekmez): VideoRecordedEvent tetiklendiğinde
+   IAIProvider.TranscribeAsync çağrılır, tamamlanınca TranscriptionCompletedEvent
+   domain event'i yayılır. Video işleme hacmi gerçekten artıp bu iş senkron istek
+   döngüsünü tıkamaya başladığında, ayrı bir aşamada gerçek bir kuyruğa
+   (RabbitMQ/MassTransit veya Hangfire) geçilebilir.
 
 3. INFRASTRUCTURE
    EF Core mapping'ler, IFileStorageService ile video/doküman depolama,
@@ -365,6 +396,8 @@ SENDEN BEKLENEN ÇIKTILAR
    - Tekrar çekim hakkı sınır kontrolü.
    - AI Code Review: mock IAIProvider ile 5 boyutlu skor doğrulaması.
    - Rapor üretimi: Şablon bölümlerinin doğru doldurulduğunun testi.
+   - Rıza geri çekme (ConsentWithdrawn): video/doküman referanslarının silindiğinin ve
+     puanlama kayıtlarının anonimleştirildiğinin doğrulanması.
 ```
 
 ---
@@ -437,6 +470,13 @@ KURALLAR:
 > Aşama 1'in ürettiği `SharedKernel`, `Infrastructure` ve `AppDbContext`
 > kodlarının context'e eklenmesi gerekir.
 
+> [!IMPORTANT]
+> ### Aşamalar Arası Doğrulama Kapısı
+> Bir aşamanın çıktısını bir sonraki aşamaya context olarak vermeden önce: (1) solution'ı
+> derleyin, (2) üretilen testleri çalıştırın, (3) diff'i gözden geçirin. "Production-ready,
+> placeholder bırakma" talimatı modele verilen bir yönergedir, çıktının doğruluğunu garanti
+> etmez. Derlenmeyen veya testi geçmeyen kod bir sonraki aşamaya taşınmamalı.
+
 > [!TIP]
 > ### Küçük Ekip İçin Pragmatik Tavsiyeler
 > - **Modular Monolith** ile başlayın. 1-3 kişilik ekiple 8 ayrı mikroservis
@@ -445,6 +485,13 @@ KURALLAR:
 >   komutunu verin. Bu, AI'ın yarım/placeholder kod üretmesini engeller.
 > - **Veri göçü ayrı bir aşamada ele alınmalıdır.** Yeni şema kararlılık
 >   kazandıktan sonra v5 → v6 migration scriptleri yazılmalıdır.
+> - **RabbitMQ/MassTransit'i ve ikinci DB sağlayıcısını MVP'ye eklemeyin.** İkisi de
+>   somut bir ölçekleme ihtiyacı doğduğunda ayrı bir aşamada eklenebilir; MVP
+>   aşamasında sadece operasyonel yük ve gecikme getirirler.
+> - **JWT altyapısını sıfırdan yazmayın.** Kanıtlanmış bir kütüphane/servis kullanın;
+>   token rotation/revocation gibi ince detaylar küçük bir ekip için yüksek risklidir.
+> - **Dört entegrasyonun hepsini MVP'ye koymayın.** İlk pilot müşterinin gerçekten
+>   ihtiyaç duyduğu tek entegrasyonla başlayın; diğerlerini müşteri talebi geldiğinde ekleyin.
 
 > [!WARNING]
 > ### Tek Prompt Tuzağı
