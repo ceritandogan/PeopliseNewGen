@@ -8,6 +8,8 @@ using Peoplise.Api.Middleware;
 using Peoplise.Infrastructure;
 using Peoplise.Modules.ATS.Application.Positions.Commands;
 using Peoplise.Modules.HrBot.Application.Conversations.Commands;
+using Peoplise.Modules.VideoInterview;
+using Peoplise.Modules.VideoInterview.Application.CaseBotProjects.Commands;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,7 +67,14 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddInfrastructure(
     builder.Configuration,
     typeof(CreatePositionCommand).Assembly,
-    typeof(StartConversationCommand).Assembly);
+    typeof(StartConversationCommand).Assembly,
+    typeof(CreateCaseBotProjectCommand).Assembly);
+
+// VideoInterview needs its own explicit registration beyond the generic discovery
+// above: an in-process queue + background worker for video transcription, which
+// reflection-based scanning can't wire up on its own. See
+// Peoplise.Modules.VideoInterview.DependencyInjection.
+builder.Services.AddVideoInterviewModule();
 
 builder.Services.AddCors(options =>
 {

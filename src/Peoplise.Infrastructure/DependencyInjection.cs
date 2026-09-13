@@ -6,15 +6,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Validation.AspNetCore;
+using Peoplise.Infrastructure.AI;
 using Peoplise.Infrastructure.Events;
 using Peoplise.Infrastructure.Identity;
+using Peoplise.Infrastructure.Media;
 using Peoplise.Infrastructure.Modules;
 using Peoplise.Infrastructure.Persistence;
 using Peoplise.Infrastructure.Persistence.Interceptors;
 using Peoplise.Infrastructure.Validation;
+using Peoplise.SharedKernel.AI;
 using Peoplise.SharedKernel.Auditing;
 using Peoplise.SharedKernel.Domain;
 using Peoplise.SharedKernel.Events;
+using Peoplise.SharedKernel.Media;
 using Peoplise.SharedKernel.MultiTenancy;
 using Peoplise.SharedKernel.Persistence;
 
@@ -48,6 +52,21 @@ public static class DependencyInjection
         services.AddPersistence(configuration);
         services.AddDomainEvents(registry);
         services.AddAuth();
+        services.AddMediaAndAI();
+
+        return services;
+    }
+
+    /// <summary>
+    /// File storage is a real, working local-disk implementation — fine for
+    /// development, not for any shared environment (see <see cref="LocalFileStorageService"/>).
+    /// The AI provider is intentionally unimplemented (see <see cref="NotConfiguredAIProvider"/>)
+    /// until a real Azure OpenAI/OpenAI/Claude integration and its credentials exist.
+    /// </summary>
+    private static IServiceCollection AddMediaAndAI(this IServiceCollection services)
+    {
+        services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+        services.AddSingleton<IAIProvider, NotConfiguredAIProvider>();
 
         return services;
     }
