@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Peoplise.Infrastructure.Modules;
 using Peoplise.Infrastructure.Persistence.Conversions;
 using Peoplise.SharedKernel.MultiTenancy;
 
@@ -15,11 +16,16 @@ namespace Peoplise.Infrastructure.Persistence;
 public class AppDbContext : TenantAwareDbContext
 {
     private readonly ITenantContext _tenantContext;
+    private readonly ModuleAssemblyRegistry _moduleAssemblyRegistry;
 
-    public AppDbContext(DbContextOptions<AppDbContext> options, ITenantContext tenantContext)
+    public AppDbContext(
+        DbContextOptions<AppDbContext> options,
+        ITenantContext tenantContext,
+        ModuleAssemblyRegistry moduleAssemblyRegistry)
         : base(options)
     {
         _tenantContext = tenantContext;
+        _moduleAssemblyRegistry = moduleAssemblyRegistry;
     }
 
     /// <summary>
@@ -37,5 +43,19 @@ public class AppDbContext : TenantAwareDbContext
         // Any entity property typed TenantId (the value object) maps to a Guid column,
         // project-wide, without needing a per-entity HasConversion call.
         configurationBuilder.Properties<TenantId>().HaveConversion<TenantIdValueConverter>();
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Each module owns its own IEntityTypeConfiguration<T> classes (and any
+        // strongly-typed-id value converters they need); this context discovers them by
+        // scanning the assemblies the Api composition root supplied, never by
+        // referencing a module project directly. Must run before the base call, since
+        // TenantAwareDbContext's filter application needs every entity type already
+        // registered in the model.
+        foreach (var assembly in _moduleAssemblyRegistry.Assemblies)
+            modelBuilder.ApplyConfigurationsFromAssembly(assembly);
+
+        base.OnModelCreating(modelBuilder);
     }
 }

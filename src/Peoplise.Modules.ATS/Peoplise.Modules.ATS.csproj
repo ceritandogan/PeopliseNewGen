@@ -2,6 +2,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Peoplise.SharedKernel\Peoplise.SharedKernel.csproj" />
+    <ProjectReference Include="..\Peoplise.Infrastructure\Peoplise.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.0.0" />
+    <PackageReference Include="MediatR" Version="14.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.19" />
   </ItemGroup>
 
   <PropertyGroup>

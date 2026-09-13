@@ -1,3 +1,5 @@
+using System.Reflection;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -6,8 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Validation.AspNetCore;
 using Peoplise.Infrastructure.Events;
 using Peoplise.Infrastructure.Identity;
+using Peoplise.Infrastructure.Modules;
 using Peoplise.Infrastructure.Persistence;
 using Peoplise.Infrastructure.Persistence.Interceptors;
+using Peoplise.Infrastructure.Validation;
 using Peoplise.SharedKernel.Auditing;
 using Peoplise.SharedKernel.Domain;
 using Peoplise.SharedKernel.Events;
@@ -25,10 +29,24 @@ namespace Peoplise.Infrastructure;
 /// </summary>
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    /// <param name="moduleAssemblies">
+    /// Each business module's assembly (e.g. <c>Peoplise.Modules.ATS</c>) — supplied by
+    /// the Api composition root, not discovered by Infrastructure itself. Used to find
+    /// MediatR command/query handlers, FluentValidation validators, and EF Core
+    /// <c>IEntityTypeConfiguration&lt;T&gt;</c> classes via reflection, without
+    /// Infrastructure ever taking a compile-time reference on a module. See
+    /// <see cref="ModuleAssemblyRegistry"/>.
+    /// </param>
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        params Assembly[] moduleAssemblies)
     {
+        var registry = new ModuleAssemblyRegistry(moduleAssemblies);
+        services.AddSingleton(registry);
+
         services.AddPersistence(configuration);
-        services.AddDomainEvents();
+        services.AddDomainEvents(registry);
         services.AddAuth();
 
         return services;
@@ -66,9 +84,17 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddDomainEvents(this IServiceCollection services)
+    private static IServiceCollection AddDomainEvents(this IServiceCollection services, ModuleAssemblyRegistry registry)
     {
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        var assemblies = registry.Assemblies.Append(typeof(DependencyInjection).Assembly).ToArray();
+
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblies(assemblies);
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+        });
+        services.AddValidatorsFromAssemblies(assemblies);
+
         services.AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
 
         return services;
