@@ -7,6 +7,7 @@ using OpenTelemetry.Trace;
 using Peoplise.Api.Middleware;
 using Peoplise.Infrastructure;
 using Peoplise.Modules.ATS.Application.Positions.Commands;
+using Peoplise.Modules.HrBot.Application.Conversations.Commands;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -61,7 +62,10 @@ builder.Services.AddSwaggerGen(options =>
 // Each business module's assembly is passed in here so Infrastructure can discover its
 // MediatR handlers, FluentValidation validators, and EF Core entity configurations by
 // reflection, without ever referencing the module directly (see ModuleAssemblyRegistry).
-builder.Services.AddInfrastructure(builder.Configuration, typeof(CreatePositionCommand).Assembly);
+builder.Services.AddInfrastructure(
+    builder.Configuration,
+    typeof(CreatePositionCommand).Assembly,
+    typeof(StartConversationCommand).Assembly);
 
 builder.Services.AddCors(options =>
 {
