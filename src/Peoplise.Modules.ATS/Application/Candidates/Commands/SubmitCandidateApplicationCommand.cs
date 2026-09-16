@@ -9,10 +9,16 @@ using Peoplise.SharedKernel.Results;
 
 namespace Peoplise.Modules.ATS.Application.Candidates.Commands;
 
+/// <summary>
+/// Deliberately takes only <see cref="PositionId"/>, not a <c>WorkflowDefinitionId</c> —
+/// a public-facing apply form has no business knowing a position's internal workflow
+/// id, and since <c>CreatePositionCommand</c> now auto-provisions a workflow for every
+/// position, there's always exactly one to resolve server-side via
+/// <see cref="Position.WorkflowDefinitionId"/>.
+/// </summary>
 public sealed record SubmitCandidateApplicationCommand(
     Guid CandidateId,
     Guid PositionId,
-    Guid WorkflowDefinitionId,
     string CandidateName,
     string CandidateEmail,
     string? CandidatePhone,
@@ -24,7 +30,6 @@ public sealed class SubmitCandidateApplicationCommandValidator : AbstractValidat
     {
         RuleFor(x => x.CandidateId).NotEmpty();
         RuleFor(x => x.PositionId).NotEmpty();
-        RuleFor(x => x.WorkflowDefinitionId).NotEmpty();
         RuleFor(x => x.CandidateName).NotEmpty().MaximumLength(200);
         RuleFor(x => x.CandidateEmail).NotEmpty().EmailAddress();
     }
@@ -33,17 +38,20 @@ public sealed class SubmitCandidateApplicationCommandValidator : AbstractValidat
 public sealed class SubmitCandidateApplicationCommandHandler : IRequestHandler<SubmitCandidateApplicationCommand, Result<Guid>>
 {
     private readonly AppDbContext _context;
+    private readonly IRepository<Position, PositionId> _positions;
     private readonly IRepository<WorkflowDefinition, WorkflowDefinitionId> _workflows;
     private readonly IRepository<CandidateProcess, CandidateProcessId> _processes;
     private readonly IUnitOfWork _unitOfWork;
 
     public SubmitCandidateApplicationCommandHandler(
         AppDbContext context,
+        IRepository<Position, PositionId> positions,
         IRepository<WorkflowDefinition, WorkflowDefinitionId> workflows,
         IRepository<CandidateProcess, CandidateProcessId> processes,
         IUnitOfWork unitOfWork)
     {
         _context = context;
+        _positions = positions;
         _workflows = workflows;
         _processes = processes;
         _unitOfWork = unitOfWork;
@@ -69,12 +77,19 @@ public sealed class SubmitCandidateApplicationCommandHandler : IRequestHandler<S
                 "CandidateProcess.AlreadyApplied", "This candidate has already applied to this position."));
         }
 
-        var workflow = await _workflows.GetByIdAsync(WorkflowDefinitionId.From(request.WorkflowDefinitionId), cancellationToken);
-        if (workflow is null)
+        var position = await _positions.GetByIdAsync(positionId, cancellationToken);
+        if (position is null)
+            return Result.Failure<Guid>(Error.NotFound("Position.NotFound", $"No position '{request.PositionId}' was found."));
+
+        if (position.WorkflowDefinitionId is null)
         {
-            return Result.Failure<Guid>(Error.NotFound(
-                "WorkflowDefinition.NotFound", $"No workflow definition '{request.WorkflowDefinitionId}' was found."));
+            return Result.Failure<Guid>(Error.Conflict(
+                "Position.NoWorkflow", "This position has no workflow assigned yet and cannot accept applications."));
         }
+
+        var workflow = await _workflows.GetByIdAsync(position.WorkflowDefinitionId, cancellationToken);
+        if (workflow is null)
+            return Result.Failure<Guid>(Error.NotFound("WorkflowDefinition.NotFound", "The position's workflow definition could not be found."));
 
         var firstStage = workflow.Stages.OrderBy(s => s.Order).FirstOrDefault();
 

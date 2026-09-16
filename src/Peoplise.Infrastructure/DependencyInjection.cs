@@ -150,6 +150,12 @@ public static class DependencyInjection
                 options.AllowPasswordFlow();
                 options.AllowRefreshTokenFlow();
 
+                // The panel/candidate apps are first-party, trusted clients with no
+                // OpenIddict client registration of their own (no client_id/secret) —
+                // this accepts token requests without one, appropriate only because
+                // every caller is code we control (see the ROPC TODO above).
+                options.AcceptAnonymousClients();
+
                 // OpenIddict rotates refresh tokens and rejects a reused/revoked one by
                 // default — the "custom JWT" risk flagged in the architecture review
                 // (hand-rolled refresh rotation/reuse detection) is handled by the
@@ -162,8 +168,13 @@ public static class DependencyInjection
                 options.AddDevelopmentEncryptionCertificate()
                     .AddDevelopmentSigningCertificate();
 
+                // TODO(auth): local HTTP-only dev. Remove DisableTransportSecurityRequirement()
+                // once this runs behind HTTPS anywhere but a local machine — OpenIddict
+                // requires HTTPS by default specifically because a bearer token sent over
+                // plain HTTP is trivially interceptable.
                 options.UseAspNetCore()
-                    .EnableTokenEndpointPassthrough();
+                    .EnableTokenEndpointPassthrough()
+                    .DisableTransportSecurityRequirement();
             })
             .AddValidation(options =>
             {

@@ -1,11 +1,14 @@
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Microsoft.EntityFrameworkCore;
 using Peoplise.Api.Middleware;
 using Peoplise.Infrastructure;
+using Peoplise.Infrastructure.Persistence;
 using Peoplise.Modules.ATS.Application.Positions.Commands;
 using Peoplise.Modules.HrBot.Application.Conversations.Commands;
 using Peoplise.Modules.VideoInterview;
@@ -35,7 +38,10 @@ builder.Services.AddOpenTelemetry()
         .AddHttpClientInstrumentation()
         .AddConsoleExporter());
 
-builder.Services.AddControllers();
+// String enums over the wire (e.g. "Hybrid", not a number) — matches the frontend's
+// TypeScript union types, which are all string literals.
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -113,6 +119,18 @@ builder.Services.AddHealthChecks()
         name: "postgres");
 
 var app = builder.Build();
+
+// Development convenience only: applies pending migrations and seeds the demo
+// tenant/user on startup, so there's no separate manual step to get a runnable local
+// database. Never do this automatically outside Development — migrations belong in a
+// deliberate deploy step everywhere else.
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await context.Database.MigrateAsync();
+    await DatabaseSeeder.SeedAsync(context);
+}
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 

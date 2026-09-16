@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Peoplise.Infrastructure.Identity;
 using Peoplise.Infrastructure.Modules;
 using Peoplise.Infrastructure.Persistence.Conversions;
 using Peoplise.SharedKernel.MultiTenancy;
@@ -36,6 +37,8 @@ public class AppDbContext : TenantAwareDbContext
     /// </summary>
     protected override Guid? CurrentTenantId => _tenantContext.TenantId?.Value;
 
+    public DbSet<User> Users => Set<User>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
@@ -55,6 +58,10 @@ public class AppDbContext : TenantAwareDbContext
         // registered in the model.
         foreach (var assembly in _moduleAssemblyRegistry.Assemblies)
             modelBuilder.ApplyConfigurationsFromAssembly(assembly);
+
+        // User lives in Infrastructure itself, not a module, so it isn't reachable via
+        // the module-assembly scan above — applied explicitly instead.
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

@@ -35,6 +35,7 @@ public sealed class PositionConfiguration : IEntityTypeConfiguration<Position>
             m.ToTable("PositionTeamMembers");
             m.WithOwner().HasForeignKey("PositionId");
             m.HasKey(x => x.Id);
+            m.Property(x => x.Id).ValueGeneratedNever();
             m.Property(x => x.UserId).IsRequired().HasMaxLength(200);
         });
 
@@ -43,6 +44,7 @@ public sealed class PositionConfiguration : IEntityTypeConfiguration<Position>
             cv.ToTable("PositionCustomVariables");
             cv.WithOwner().HasForeignKey("PositionId");
             cv.HasKey(x => x.Id);
+            cv.Property(x => x.Id).ValueGeneratedNever();
             cv.Property(x => x.Key).IsRequired().HasMaxLength(200);
         });
 
@@ -51,6 +53,7 @@ public sealed class PositionConfiguration : IEntityTypeConfiguration<Position>
             ld.ToTable("PositionLegalDocuments");
             ld.WithOwner().HasForeignKey("PositionId");
             ld.HasKey(x => x.Id);
+            ld.Property(x => x.Id).ValueGeneratedNever();
             ld.Property(x => x.Title).IsRequired().HasMaxLength(200);
         });
 

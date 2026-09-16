@@ -3,6 +3,7 @@ export { ApiError, toApiError } from "./ApiError";
 export * from "./types";
 
 export * as positionsApi from "./resources/positions";
+export type { GetPositionsListParams } from "./resources/positions";
 export * as candidatesApi from "./resources/candidates";
 export type { GetCandidatePipelineParams } from "./resources/candidates";
 export * as conversationsApi from "./resources/conversations";

@@ -44,6 +44,7 @@ public sealed class CandidateProcessConfiguration : IEntityTypeConfiguration<Can
             note.ToTable("CandidateNotes");
             note.WithOwner().HasForeignKey("CandidateProcessId");
             note.HasKey(n => n.Id);
+            note.Property(n => n.Id).ValueGeneratedNever();
             note.Property(n => n.AuthorId).IsRequired().HasMaxLength(200);
             note.Property(n => n.Text).IsRequired();
         });
@@ -53,6 +54,7 @@ public sealed class CandidateProcessConfiguration : IEntityTypeConfiguration<Can
             evaluation.ToTable("CandidateEvaluations");
             evaluation.WithOwner().HasForeignKey("CandidateProcessId");
             evaluation.HasKey(e => e.Id);
+            evaluation.Property(e => e.Id).ValueGeneratedNever();
             evaluation.Property(e => e.EvaluatorId).IsRequired().HasMaxLength(200);
             evaluation.Property(e => e.Score)
                 .HasConversion(score => score.Value, value => EvaluationScore.From(value))
@@ -65,6 +67,7 @@ public sealed class CandidateProcessConfiguration : IEntityTypeConfiguration<Can
             completed.ToTable("CandidateProcessCompletedStages");
             completed.WithOwner().HasForeignKey("CandidateProcessId");
             completed.HasKey(c => c.Id);
+            completed.Property(c => c.Id).ValueGeneratedNever();
         });
 
         builder.OwnsOne(p => p.TalentPoolEntry, entry =>
@@ -72,6 +75,7 @@ public sealed class CandidateProcessConfiguration : IEntityTypeConfiguration<Can
             entry.ToTable("CandidateTalentPoolEntries");
             entry.WithOwner().HasForeignKey("CandidateProcessId");
             entry.HasKey(e => e.Id);
+            entry.Property(e => e.Id).ValueGeneratedNever();
             entry.PrimitiveCollection(e => e.Tags);
         });
 

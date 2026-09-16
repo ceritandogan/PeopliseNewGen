@@ -4,8 +4,21 @@ import type {
   CandidatePipelineItem,
   PagedResult,
   PipelineStatus,
+  SubmitCandidateApplicationRequest,
   SubmitEvaluationRequest,
 } from "../types";
+
+/**
+ * Anonymous by design — this is the public apply-form endpoint (`[AllowAnonymous]` on
+ * the backend), called from the candidate app, which has no AuthProvider/session at
+ * all. Goes through the same shared `httpClient` as everything else: its request
+ * interceptor only *adds* an Authorization header when a session exists, so an
+ * unauthenticated caller is unaffected.
+ */
+export async function submitApplication(request: SubmitCandidateApplicationRequest): Promise<{ id: string }> {
+  const { data } = await httpClient.post<{ id: string }>("/api/candidates/apply", request);
+  return data;
+}
 
 export interface GetCandidatePipelineParams {
   positionId: string;
@@ -36,13 +49,6 @@ export async function submitEvaluation(candidateProcessId: string, request: Subm
   await httpClient.post(`/api/candidates/${candidateProcessId}/evaluations`, request);
 }
 
-/**
- * TODO(backend): the Candidate Detail page needs this ("not ekleme" in the architecture
- * doc), but ATS's Application layer only ever got the 5 commands the doc's Stage 2 spec
- * named — there's no AddCandidateNoteCommand yet, even though CandidateProcess.AddNote
- * exists at the domain level. This call has nothing to reach until that command (and a
- * controller route for it) is added.
- */
 export async function addCandidateNote(
   candidateProcessId: string,
   request: { authorId: string; text: string; isPrivate: boolean },

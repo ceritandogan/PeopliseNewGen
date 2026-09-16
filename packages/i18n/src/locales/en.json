@@ -84,6 +84,17 @@
     "send": "Send",
     "thinking": "Typing…"
   },
+  "apply": {
+    "title": "Apply for this position",
+    "fullName": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "resumeUrl": "Resume link",
+    "submit": "Submit application",
+    "thankYouTitle": "Application received",
+    "thankYouBody": "Thanks for applying — we'll be in touch.",
+    "missingPosition": "This application link is missing a position."
+  },
   "videoInterview": {
     "title": "Video Interview",
     "cameraPreview": "Camera preview",

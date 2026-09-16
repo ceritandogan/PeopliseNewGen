@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type CreatePositionRequest, positionsApi } from "@peoplise/api-client";
+import { type CreatePositionRequest, type GetPositionsListParams, positionsApi } from "@peoplise/api-client";
+
+export function usePositionsList(params: GetPositionsListParams = {}) {
+  return useQuery({
+    queryKey: ["positions", "list", params],
+    queryFn: () => positionsApi.getPositionsList(params),
+  });
+}
 
 export function usePositionDashboard(positionId: string | undefined) {
   return useQuery({

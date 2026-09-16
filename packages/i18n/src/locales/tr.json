@@ -84,6 +84,17 @@
     "send": "Gönder",
     "thinking": "Yazıyor…"
   },
+  "apply": {
+    "title": "Bu pozisyona başvur",
+    "fullName": "Ad soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "resumeUrl": "Özgeçmiş bağlantısı",
+    "submit": "Başvuruyu gönder",
+    "thankYouTitle": "Başvurunuz alındı",
+    "thankYouBody": "Başvurduğunuz için teşekkürler — sizinle iletişime geçeceğiz.",
+    "missingPosition": "Bu başvuru bağlantısında pozisyon bilgisi eksik."
+  },
   "videoInterview": {
     "title": "Video Mülakat",
     "cameraPreview": "Kamera önizleme",

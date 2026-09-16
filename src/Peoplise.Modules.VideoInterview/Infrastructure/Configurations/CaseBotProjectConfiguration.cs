@@ -27,6 +27,7 @@ public sealed class CaseBotProjectConfiguration : IEntityTypeConfiguration<CaseB
             flow.ToTable("CaseFlows");
             flow.WithOwner().HasForeignKey("CaseBotProjectId");
             flow.HasKey(f => f.Id);
+            flow.Property(f => f.Id).ValueGeneratedNever();
             flow.Property(f => f.Name).IsRequired().HasMaxLength(200);
 
             flow.OwnsMany(f => f.Steps, step =>
@@ -34,6 +35,7 @@ public sealed class CaseBotProjectConfiguration : IEntityTypeConfiguration<CaseB
                 step.ToTable("CaseFlowSteps");
                 step.WithOwner().HasForeignKey("FlowId");
                 step.HasKey(s => s.Id);
+                step.Property(s => s.Id).ValueGeneratedNever();
                 step.Property(s => s.Content).IsRequired();
                 step.PrimitiveCollection(s => s.RelatedCompetencyIds);
 
@@ -42,6 +44,7 @@ public sealed class CaseBotProjectConfiguration : IEntityTypeConfiguration<CaseB
                     route.ToTable("CaseFlowStepRoutes");
                     route.WithOwner().HasForeignKey("StepId");
                     route.HasKey(r => r.Id);
+                    route.Property(r => r.Id).ValueGeneratedNever();
                 });
             });
         });
@@ -52,6 +55,7 @@ public sealed class CaseBotProjectConfiguration : IEntityTypeConfiguration<CaseB
             competency.ToTable("Competencies");
             competency.WithOwner().HasForeignKey("CaseBotProjectId");
             competency.HasKey(c => c.Id);
+            competency.Property(c => c.Id).ValueGeneratedNever();
             competency.Property(c => c.Name).IsRequired().HasMaxLength(200);
 
             competency.OwnsMany(c => c.Levels, level =>
@@ -59,6 +63,7 @@ public sealed class CaseBotProjectConfiguration : IEntityTypeConfiguration<CaseB
                 level.ToTable("CompetencyLevels");
                 level.WithOwner().HasForeignKey("CompetencyId");
                 level.HasKey(l => l.Id);
+                level.Property(l => l.Id).ValueGeneratedNever();
             });
 
             competency.OwnsMany(c => c.Indicators, indicator =>
@@ -66,6 +71,7 @@ public sealed class CaseBotProjectConfiguration : IEntityTypeConfiguration<CaseB
                 indicator.ToTable("CompetencyBehavioralIndicators");
                 indicator.WithOwner().HasForeignKey("CompetencyId");
                 indicator.HasKey(i => i.Id);
+                indicator.Property(i => i.Id).ValueGeneratedNever();
                 indicator.Property(i => i.Description).IsRequired();
             });
         });
@@ -76,6 +82,7 @@ public sealed class CaseBotProjectConfiguration : IEntityTypeConfiguration<CaseB
             template.ToTable("ReportTemplates");
             template.WithOwner().HasForeignKey("CaseBotProjectId");
             template.HasKey(t => t.Id);
+            template.Property(t => t.Id).ValueGeneratedNever();
             template.Property(t => t.Name).IsRequired().HasMaxLength(200);
 
             template.OwnsMany(t => t.Sections, section =>
@@ -83,6 +90,7 @@ public sealed class CaseBotProjectConfiguration : IEntityTypeConfiguration<CaseB
                 section.ToTable("ReportTemplateSections");
                 section.WithOwner().HasForeignKey("ReportTemplateId");
                 section.HasKey(s => s.Id);
+                section.Property(s => s.Id).ValueGeneratedNever();
                 section.Property(s => s.Title).IsRequired().HasMaxLength(200);
             });
         });

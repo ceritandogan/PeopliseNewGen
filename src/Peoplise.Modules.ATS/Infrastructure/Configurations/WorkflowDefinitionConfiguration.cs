@@ -26,6 +26,7 @@ public sealed class WorkflowDefinitionConfiguration : IEntityTypeConfiguration<W
             stage.ToTable("WorkflowStages");
             stage.WithOwner().HasForeignKey("WorkflowDefinitionId");
             stage.HasKey(s => s.Id);
+            stage.Property(s => s.Id).ValueGeneratedNever();
             stage.Property(s => s.Name).IsRequired().HasMaxLength(200);
 
             stage.OwnsMany(s => s.Rules, rule =>
@@ -33,6 +34,7 @@ public sealed class WorkflowDefinitionConfiguration : IEntityTypeConfiguration<W
                 rule.ToTable("WorkflowStageRules");
                 rule.WithOwner().HasForeignKey("StageId");
                 rule.HasKey(r => r.Id);
+                rule.Property(r => r.Id).ValueGeneratedNever();
             });
         });
 

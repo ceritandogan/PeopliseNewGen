@@ -1,9 +1,9 @@
 /**
  * Hand-typed to mirror the backend's actual Application-layer DTOs (Peoplise.Modules.*).
- * Regenerate this file (and the resource modules) with `openapi-typescript` (or similar)
- * once real HTTP controllers exist and a live `swagger.json` can be fetched — as of
- * Stage 5, no module has HTTP endpoints yet, only MediatR command/query handlers, so
- * there is no OpenAPI spec to generate *from* today. Keep these in sync by hand until then.
+ * Real HTTP controllers now exist for the thin-slice endpoints (Positions, Candidates,
+ * auth), but only for those five — regenerate this file (and the resource modules) with
+ * `openapi-typescript` once a live `swagger.json` covers the rest of the surface. Keep
+ * these in sync by hand until then.
  */
 
 // ---- ATS ----------------------------------------------------------------
@@ -37,6 +37,28 @@ export interface PositionDashboard {
   title: string;
   totalApplicants: number;
   applicantsByStatus: Partial<Record<PipelineStatus, number>>;
+}
+
+export interface PositionListItem {
+  positionId: string;
+  title: string;
+  department: string;
+  city: string;
+  country: string;
+}
+
+export interface SubmitCandidateApplicationRequest {
+  /**
+   * Client-generated: real candidate registration/dedup is out of scope for the thin
+   * slice (see the grilled plan), so each public apply-form submission mints a fresh id
+   * rather than looking up or creating a reusable Candidate identity.
+   */
+  candidateId: string;
+  positionId: string;
+  candidateName: string;
+  candidateEmail: string;
+  candidatePhone?: string;
+  resumeUrl?: string;
 }
 
 export interface CandidatePipelineItem {

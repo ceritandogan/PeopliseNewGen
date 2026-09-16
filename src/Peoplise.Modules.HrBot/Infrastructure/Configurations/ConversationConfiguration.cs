@@ -29,6 +29,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
             variable.ToTable("ConversationVariables");
             variable.WithOwner().HasForeignKey("ConversationId");
             variable.HasKey(v => v.Id);
+            variable.Property(v => v.Id).ValueGeneratedNever();
             variable.Property(v => v.Key).IsRequired().HasMaxLength(200);
         });
 
@@ -37,6 +38,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
             log.ToTable("ConversationLogs");
             log.WithOwner().HasForeignKey("ConversationId");
             log.HasKey(l => l.Id);
+            log.Property(l => l.Id).ValueGeneratedNever();
         });
 
         builder.Property(c => c.TenantId).IsRequired();

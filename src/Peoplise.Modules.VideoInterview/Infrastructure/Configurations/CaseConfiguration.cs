@@ -28,6 +28,7 @@ public sealed class CaseConfiguration : IEntityTypeConfiguration<Case>
             sc.ToTable("CaseStepConversations");
             sc.WithOwner().HasForeignKey("CaseId");
             sc.HasKey(s => s.Id);
+            sc.Property(s => s.Id).ValueGeneratedNever();
         });
 
         builder.OwnsMany(c => c.RetakeCounts, rc =>
@@ -35,6 +36,7 @@ public sealed class CaseConfiguration : IEntityTypeConfiguration<Case>
             rc.ToTable("CaseStepRetakeCounts");
             rc.WithOwner().HasForeignKey("CaseId");
             rc.HasKey(r => r.Id);
+            rc.Property(r => r.Id).ValueGeneratedNever();
         });
 
         builder.OwnsMany(c => c.Scorings, scoring =>
@@ -42,6 +44,7 @@ public sealed class CaseConfiguration : IEntityTypeConfiguration<Case>
             scoring.ToTable("CaseScorings");
             scoring.WithOwner().HasForeignKey("CaseId");
             scoring.HasKey(s => s.Id);
+            scoring.Property(s => s.Id).ValueGeneratedNever();
             scoring.Property(s => s.ReviewerId).IsRequired().HasMaxLength(200);
         });
 
@@ -50,6 +53,7 @@ public sealed class CaseConfiguration : IEntityTypeConfiguration<Case>
             review.ToTable("CaseCodeReviews");
             review.WithOwner().HasForeignKey("CaseId");
             review.HasKey(r => r.Id);
+            review.Property(r => r.Id).ValueGeneratedNever();
         });
 
         // CaseResult → CompetencyResult: computed once, on Complete(); optional (null
@@ -59,12 +63,14 @@ public sealed class CaseConfiguration : IEntityTypeConfiguration<Case>
             result.ToTable("CaseResults");
             result.WithOwner().HasForeignKey("CaseId");
             result.HasKey(r => r.Id);
+            result.Property(r => r.Id).ValueGeneratedNever();
 
             result.OwnsMany(r => r.CompetencyResults, competencyResult =>
             {
                 competencyResult.ToTable("CaseCompetencyResults");
                 competencyResult.WithOwner().HasForeignKey("CaseResultId");
                 competencyResult.HasKey(cr => cr.Id);
+                competencyResult.Property(cr => cr.Id).ValueGeneratedNever();
             });
         });
 
@@ -74,12 +80,14 @@ public sealed class CaseConfiguration : IEntityTypeConfiguration<Case>
             report.ToTable("CaseReports");
             report.WithOwner().HasForeignKey("CaseId");
             report.HasKey(r => r.Id);
+            report.Property(r => r.Id).ValueGeneratedNever();
 
             report.OwnsMany(r => r.Sections, section =>
             {
                 section.ToTable("CaseReportSections");
                 section.WithOwner().HasForeignKey("ReportId");
                 section.HasKey(s => s.Id);
+                section.Property(s => s.Id).ValueGeneratedNever();
                 section.Property(s => s.Title).IsRequired().HasMaxLength(200);
             });
         });

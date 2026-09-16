@@ -16,6 +16,7 @@ const tokenClient = axios.create({
 
 interface TokenResponse {
   access_token: string;
+  id_token: string;
   refresh_token: string;
   expires_in: number;
   token_type: string;
@@ -40,12 +41,15 @@ function toSession(token: TokenResponse, user: AuthSession["user"]): AuthSession
 }
 
 /**
- * The backend's token endpoint doesn't return user profile info alongside the token
- * (OpenIddict's password grant response is token-only) — decode it from the access
- * token's own claims instead of a second round-trip.
+ * Reads user info from the **id_token**, not the access_token: OpenIddict encrypts
+ * access tokens by default (opaque, only this API can read them — that's deliberate,
+ * not a bug), but issues a signed-only id_token whenever "openid" scope is requested,
+ * exactly so the client has something decodable. The backend's `AuthorizationController`
+ * puts sub/email/name/role into both tokens; `tenant_id` is access-token-only since only
+ * the API needs it.
  */
-function decodeUserFromAccessToken(accessToken: string): AuthSession["user"] {
-  const [, payloadSegment] = accessToken.split(".");
+function decodeUserFromIdToken(idToken: string): AuthSession["user"] {
+  const [, payloadSegment] = idToken.split(".");
   if (!payloadSegment) return { id: "", email: "", roles: [] };
 
   try {
@@ -67,10 +71,10 @@ export async function passwordGrant(email: string, password: string): Promise<Au
     password,
     scope: "openid offline_access",
   });
-  return toSession(token, decodeUserFromAccessToken(token.access_token));
+  return toSession(token, decodeUserFromIdToken(token.id_token));
 }
 
 export async function refreshTokenGrant(refreshToken: string): Promise<AuthSession> {
   const token = await requestToken({ grant_type: "refresh_token", refresh_token: refreshToken });
-  return toSession(token, decodeUserFromAccessToken(token.access_token));
+  return toSession(token, decodeUserFromIdToken(token.id_token));
 }

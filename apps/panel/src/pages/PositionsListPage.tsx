@@ -5,8 +5,8 @@ import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { Button, DataTable, Input, Modal, useToast, type DataTableColumn } from "@peoplise/ui";
-import { toApiError } from "@peoplise/api-client";
-import { useCreatePosition } from "../hooks/usePositions";
+import { toApiError, type PositionListItem } from "@peoplise/api-client";
+import { useCreatePosition, usePositionsList } from "../hooks/usePositions";
 
 const createPositionSchema = z.object({
   title: z.string().min(1),
@@ -20,21 +20,18 @@ const createPositionSchema = z.object({
 
 type CreatePositionForm = z.infer<typeof createPositionSchema>;
 
-interface PositionRow {
-  id: string;
-  title: string;
-  department: string;
-}
-
-// Same backend gap as the Dashboard page: no list-positions query yet.
-const MOCK_ROWS: PositionRow[] = [
-  { id: "1", title: "Senior Backend Engineer", department: "Engineering" },
-  { id: "2", title: "Product Designer", department: "Design" },
-];
-
-const columns: DataTableColumn<PositionRow>[] = [
-  { key: "title", header: "Title", render: (row) => <Link to={`/positions/${row.id}`} className="text-brand-600 hover:underline">{row.title}</Link> },
+const columns: DataTableColumn<PositionListItem>[] = [
+  {
+    key: "title",
+    header: "Title",
+    render: (row) => (
+      <Link to={`/positions/${row.positionId}`} className="text-brand-600 hover:underline">
+        {row.title}
+      </Link>
+    ),
+  },
   { key: "department", header: "Department", render: (row) => row.department },
+  { key: "location", header: "Location", render: (row) => `${row.city}, ${row.country}` },
 ];
 
 export function PositionsListPage() {
@@ -42,6 +39,7 @@ export function PositionsListPage() {
   const { show } = useToast();
   const [isCreateOpen, setCreateOpen] = useState(false);
   const createPosition = useCreatePosition();
+  const { data, isLoading } = usePositionsList();
 
   const {
     register,
@@ -71,7 +69,13 @@ export function PositionsListPage() {
         <Button onClick={() => setCreateOpen(true)}>{t("positions.newPosition")}</Button>
       </div>
 
-      <DataTable columns={columns} rows={MOCK_ROWS} getRowKey={(row) => row.id} />
+      <DataTable
+        columns={columns}
+        rows={data?.items ?? []}
+        getRowKey={(row) => row.positionId}
+        isLoading={isLoading}
+        emptyMessage={t("common.noResults") as string}
+      />
 
       <Modal open={isCreateOpen} onClose={() => setCreateOpen(false)} title={t("positions.newPosition")}>
         <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>

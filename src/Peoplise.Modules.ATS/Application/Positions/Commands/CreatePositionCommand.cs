@@ -30,11 +30,16 @@ public sealed class CreatePositionCommandValidator : AbstractValidator<CreatePos
 public sealed class CreatePositionCommandHandler : IRequestHandler<CreatePositionCommand, Result<Guid>>
 {
     private readonly IRepository<Position, PositionId> _positions;
+    private readonly IRepository<WorkflowDefinition, WorkflowDefinitionId> _workflows;
     private readonly IUnitOfWork _unitOfWork;
 
-    public CreatePositionCommandHandler(IRepository<Position, PositionId> positions, IUnitOfWork unitOfWork)
+    public CreatePositionCommandHandler(
+        IRepository<Position, PositionId> positions,
+        IRepository<WorkflowDefinition, WorkflowDefinitionId> workflows,
+        IUnitOfWork unitOfWork)
     {
         _positions = positions;
+        _workflows = workflows;
         _unitOfWork = unitOfWork;
     }
 
@@ -44,6 +49,15 @@ public sealed class CreatePositionCommandHandler : IRequestHandler<CreatePositio
             request.Title, request.Department, request.City, request.Country,
             request.WorkMode, request.SeniorityLevel, request.EmploymentType);
 
+        // Auto-provisioned so every position can receive applications the moment it's
+        // created — a position with no workflow can't be applied to at all (see
+        // SubmitCandidateApplicationCommandHandler). One default stage is enough for
+        // a candidate to land somewhere; add more via AddStageToWorkflowCommand.
+        var workflow = WorkflowDefinition.Create($"{request.Title} — Default Workflow");
+        workflow.AddStage("Application Review", StageType.ReviewerApproval, order: 0);
+        position.AssignWorkflow(workflow.Id);
+
+        await _workflows.AddAsync(workflow, cancellationToken);
         await _positions.AddAsync(position, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
