@@ -7,10 +7,10 @@ using Peoplise.SharedKernel.Results;
 
 namespace Peoplise.Modules.ATS.Application.Positions.Queries;
 
-/// <summary>The "list every open position" query the Dashboard/Positions pages needed but never had (flagged since Stage 5's frontend build).</summary>
+/// <summary>Lists every position for the tenant, most recently created last. There's no position lifecycle/status yet, so this is unfiltered — see CONTEXT.md.</summary>
 public sealed record GetPositionsListQuery(int Page = 1, int PageSize = 20) : IRequest<Result<PagedResult<PositionListItem>>>;
 
-public sealed record PositionListItem(Guid PositionId, string Title, string Department, string City, string Country);
+public sealed record PositionListItem(Guid PositionId, string Title, string Department, string City, string Country, int ApplicantCount);
 
 public sealed class GetPositionsListQueryHandler : IRequestHandler<GetPositionsListQuery, Result<PagedResult<PositionListItem>>>
 {
@@ -32,10 +32,22 @@ public sealed class GetPositionsListQueryHandler : IRequestHandler<GetPositionsL
         var items = await query
             .Skip(pagedRequest.Skip)
             .Take(pagedRequest.PageSize)
-            .Select(p => new { p.Id, p.Title, p.Department, p.City, p.Country })
+            .Select(p => new
+            {
+                p.Id,
+                p.Title,
+                p.Department,
+                p.City,
+                p.Country,
+                // Correlated subquery, not a per-position round trip: EF Core folds this
+                // into the same SQL statement as the paged position list above.
+                ApplicantCount = _context.Set<CandidateProcess>().Count(c => c.PositionId == p.Id),
+            })
             .ToListAsync(cancellationToken);
 
-        var mapped = items.Select(p => new PositionListItem(p.Id.Value, p.Title, p.Department, p.City, p.Country)).ToList();
+        var mapped = items
+            .Select(p => new PositionListItem(p.Id.Value, p.Title, p.Department, p.City, p.Country, p.ApplicantCount))
+            .ToList();
 
         return Result.Success(new PagedResult<PositionListItem>(mapped, pagedRequest.Page, pagedRequest.PageSize, totalCount));
     }

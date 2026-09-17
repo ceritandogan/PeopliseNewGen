@@ -1,21 +1,20 @@
 import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, Badge } from "@peoplise/ui";
+import { usePositionsList } from "../hooks/usePositions";
 
 /**
- * TODO(backend): ATS's Application layer only has GetPositionDashboardQuery (one
- * position at a time) — there's no "list every open position" query yet, which this
- * page's card grid needs. Using placeholder data until that query (and its controller
- * route) exist; swap `MOCK_POSITIONS` for a real `usePositionsList()` hook then.
+ * No position lifecycle/status exists yet (see CONTEXT.md), so this lists every
+ * position for the tenant rather than filtering to some notion of "open". A single
+ * generous page covers the whole list without pagination UI — see the dashboard's
+ * design notes for why the total-applicants card relies on that.
  */
-const MOCK_POSITIONS = [
-  { id: "1", title: "Senior Backend Engineer", department: "Engineering", applicants: 24 },
-  { id: "2", title: "Product Designer", department: "Design", applicants: 12 },
-  { id: "3", title: "Customer Success Manager", department: "Operations", applicants: 8 },
-];
+const DASHBOARD_PAGE_SIZE = 200;
 
 export function DashboardPage() {
   const { t } = useTranslation();
-  const totalApplicants = MOCK_POSITIONS.reduce((sum, position) => sum + position.applicants, 0);
+  const { data, isLoading } = usePositionsList({ pageSize: DASHBOARD_PAGE_SIZE });
+  const positions = data?.items ?? [];
+  const totalApplicants = positions.reduce((sum, position) => sum + position.applicantCount, 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,21 +28,27 @@ export function DashboardPage() {
         <p className="text-sm text-slate-500">{t("dashboard.totalApplicants")}</p>
       </Card>
 
-      <section aria-labelledby="open-positions-heading" className="flex flex-col gap-3">
-        <h2 id="open-positions-heading" className="text-sm font-medium uppercase tracking-wide text-slate-500">
-          {t("dashboard.openPositions")}
+      <section aria-labelledby="positions-heading" className="flex flex-col gap-3">
+        <h2 id="positions-heading" className="text-sm font-medium uppercase tracking-wide text-slate-500">
+          {t("dashboard.positions")}
         </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {MOCK_POSITIONS.map((position) => (
-            <Card key={position.id}>
-              <CardHeader>
-                <CardTitle>{position.title}</CardTitle>
-                <Badge variant="brand">{position.applicants}</Badge>
-              </CardHeader>
-              <p className="text-sm text-slate-500">{position.department}</p>
-            </Card>
-          ))}
-        </div>
+        {isLoading ? (
+          <p className="text-sm text-slate-500">{t("common.loading")}</p>
+        ) : positions.length === 0 ? (
+          <p className="text-sm text-slate-500">{t("common.noResults")}</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {positions.map((position) => (
+              <Card key={position.positionId}>
+                <CardHeader>
+                  <CardTitle>{position.title}</CardTitle>
+                  <Badge variant="brand">{position.applicantCount}</Badge>
+                </CardHeader>
+                <p className="text-sm text-slate-500">{position.department}</p>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

@@ -45,6 +45,7 @@ export interface PositionListItem {
   department: string;
   city: string;
   country: string;
+  applicantCount: number;
 }
 
 export interface SubmitCandidateApplicationRequest {

@@ -38,7 +38,7 @@
   },
   "dashboard": {
     "title": "Panel",
-    "openPositions": "Açık pozisyonlar",
+    "positions": "Pozisyonlar",
     "candidateDistribution": "Aday dağılımı",
     "totalApplicants": "Toplam başvuru"
   },

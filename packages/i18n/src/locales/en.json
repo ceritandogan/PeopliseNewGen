@@ -38,7 +38,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "openPositions": "Open positions",
+    "positions": "Positions",
     "candidateDistribution": "Candidate distribution",
     "totalApplicants": "Total applicants"
   },
