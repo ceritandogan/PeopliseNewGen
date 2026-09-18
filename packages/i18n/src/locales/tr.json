@@ -106,7 +106,9 @@
     "retake": "Tekrar çek",
     "retakesRemaining": "{{count}} tekrar çekim hakkı kaldı",
     "retakesRemaining_other": "{{count}} tekrar çekim hakkı kaldı",
-    "noRetakesLeft": "Tekrar çekim hakkınız kalmadı"
+    "noRetakesLeft": "Tekrar çekim hakkınız kalmadı",
+    "submitting": "Gönderiliyor…",
+    "submitted": "Teşekkürler — cevabınız gönderildi."
   },
   "survey": {
     "title": "Değerlendirme",

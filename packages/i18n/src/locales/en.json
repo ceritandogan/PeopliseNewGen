@@ -106,7 +106,9 @@
     "retake": "Retake",
     "retakesRemaining": "{{count}} retake remaining",
     "retakesRemaining_other": "{{count}} retakes remaining",
-    "noRetakesLeft": "No retakes left"
+    "noRetakesLeft": "No retakes left",
+    "submitting": "Submitting…",
+    "submitted": "Thanks — your answer has been submitted."
   },
   "survey": {
     "title": "Assessment",

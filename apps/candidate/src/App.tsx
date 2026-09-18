@@ -9,7 +9,7 @@ export function App() {
     <Routes>
       <Route path="/bot-chat/:positionId" element={<BotChatPage />} />
       <Route path="/apply/:positionId" element={<ApplyPage />} />
-      <Route path="/video-interview" element={<VideoInterviewPage />} />
+      <Route path="/video-interview/:positionId" element={<VideoInterviewPage />} />
       <Route path="/survey" element={<SurveyPage />} />
     </Routes>
   );

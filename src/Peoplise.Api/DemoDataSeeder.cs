@@ -5,7 +5,9 @@ using Peoplise.Modules.ATS.Domain.ValueObjects;
 using Peoplise.Modules.HrBot.Domain.Aggregates;
 using Peoplise.Modules.HrBot.Domain.Entities;
 using Peoplise.Modules.HrBot.Domain.ValueObjects;
+using Peoplise.Modules.VideoInterview.Domain.Aggregates;
 using Peoplise.SharedKernel.MultiTenancy;
+using VideoStepType = Peoplise.Modules.VideoInterview.Domain.ValueObjects.StepType;
 
 namespace Peoplise.Api;
 
@@ -62,9 +64,20 @@ public static class DemoDataSeeder
         greeting.AddRoute(StepRoute.ToStep(ConditionType.HasOnlyKeyword, ["No"], screenOut.Id));
         greeting.AddRoute(StepRoute.ToStep(ConditionType.HasOnlyKeyword, ["Yes"], waitResponse.Id));
 
+        // Same demo position carries both assessments — a real position would plausibly
+        // have more than one stage configured, and it avoids a second throwaway Position.
+        var caseBotProject = CaseBotProject.Create(
+            "HR Bot Demo — Backend Engineer Video Interview", position.Id.Value, retakesAllowed: 1, retentionPeriodDays: 90).Value;
+        var caseFlow = caseBotProject.AddFlow("Video Screening", isDefault: true).Value;
+        caseFlow.AddStep(
+            VideoStepType.RecordVideoAnswer,
+            "Tell us about a challenging technical problem you've solved recently.",
+            order: 0, preparationTimeSeconds: 10, recordingTimeSeconds: 90);
+
         context.Set<WorkflowDefinition>().Add(workflow);
         context.Set<Position>().Add(position);
         context.Set<BotProject>().Add(botProject);
+        context.Set<CaseBotProject>().Add(caseBotProject);
 
         await context.SaveChangesAsync(cancellationToken);
     }

@@ -181,9 +181,33 @@ export interface ConversationHistory {
 
 // ---- Video Interview --------------------------------------------------------
 
+export type CaseStepType =
+  | "ShowMessage"
+  | "PlayVideoQuestion"
+  | "RecordVideoAnswer"
+  | "UploadDocument"
+  | "TakeNote"
+  | "AddCalendarEvent"
+  | "SetPoint"
+  | "QuickReply"
+  | "FillInTheBlank"
+  | "BasketQuestion"
+  | "SoftwareDevelopmentQuestion";
+
+/** Keyed by positionId, not caseBotProjectId — same reasoning as HrBot's StartConversationRequest. */
 export interface StartCandidateCaseRequest {
-  caseBotProjectId: string;
+  positionId: string;
   candidateId: string;
+}
+
+export interface StartCandidateCaseResult {
+  caseId: string;
+  retakesAllowed: number;
+  stepId: string;
+  stepType: CaseStepType;
+  content: string;
+  preparationTimeSeconds: number | null;
+  recordingTimeSeconds: number | null;
 }
 
 export interface CodeReviewResult {

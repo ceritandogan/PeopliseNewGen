@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 export interface CameraPreviewState {
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  /** The raw stream, for a recorder (e.g. useMediaRecorder) to capture from — a ref, not state, since the stream object itself never needs to trigger a re-render. */
+  streamRef: React.RefObject<MediaStream | null>;
   status: "requesting" | "ready" | "denied" | "unsupported";
   errorMessage: string | null;
 }
@@ -9,6 +11,7 @@ export interface CameraPreviewState {
 /** Requests camera + microphone access and streams it into a <video> for a live self-preview — real getUserMedia, not mocked. */
 export function useCameraPreview(): CameraPreviewState {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [status, setStatus] = useState<CameraPreviewState["status"]>("requesting");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -18,7 +21,6 @@ export function useCameraPreview(): CameraPreviewState {
       return;
     }
 
-    let stream: MediaStream | undefined;
     let cancelled = false;
 
     navigator.mediaDevices
@@ -28,7 +30,7 @@ export function useCameraPreview(): CameraPreviewState {
           mediaStream.getTracks().forEach((track) => track.stop());
           return;
         }
-        stream = mediaStream;
+        streamRef.current = mediaStream;
         if (videoRef.current) videoRef.current.srcObject = mediaStream;
         setStatus("ready");
       })
@@ -40,9 +42,10 @@ export function useCameraPreview(): CameraPreviewState {
 
     return () => {
       cancelled = true;
-      stream?.getTracks().forEach((track) => track.stop());
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     };
   }, []);
 
-  return { videoRef, status, errorMessage };
+  return { videoRef, streamRef, status, errorMessage };
 }

@@ -72,4 +72,33 @@ public class SubmitVideoAnswerCommandHandlerTests
         await fileStorage.Received(1).DeleteAsync("local-storage://rejected-retake.mp4", Arg.Any<CancellationToken>());
         await unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task Completes_the_case_when_the_submitted_step_is_the_flows_last_step()
+    {
+        var project = CreateProject(retakesAllowed: 1);
+        var flow = project.AddFlow("Video Screening", isDefault: true).Value;
+        var step = flow.AddStep(StepType.RecordVideoAnswer, "Tell us about yourself.", order: 0).Value;
+        var @case = Case.Start(project.Id, Guid.NewGuid(), flow.Id, step.Id, DateTimeOffset.UtcNow);
+
+        var cases = Substitute.For<IRepository<Case, CaseId>>();
+        cases.GetByIdAsync(@case.Id, Arg.Any<CancellationToken>()).Returns(@case);
+        var projects = Substitute.For<IRepository<CaseBotProject, CaseBotProjectId>>();
+        projects.GetByIdAsync(project.Id, Arg.Any<CancellationToken>()).Returns(project);
+
+        var fileStorage = Substitute.For<IFileStorageService>();
+        fileStorage.UploadAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns("local-storage://answer.mp4");
+
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+        var handler = new SubmitVideoAnswerCommandHandler(cases, projects, fileStorage, unitOfWork);
+
+        using var content = new MemoryStream([1, 2, 3]);
+        var result = await handler.Handle(
+            new SubmitVideoAnswerCommand(@case.Id.Value, step.Id, content, "answer.mp4", "video/mp4"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        @case.Status.Should().Be(CaseStatus.Completed);
+        @case.CompletedAt.Should().NotBeNull();
+    }
 }

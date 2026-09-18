@@ -1,20 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@peoplise/ui";
+import { useParams } from "react-router";
+import { Button, useToast } from "@peoplise/ui";
+import { toApiError } from "@peoplise/api-client";
 import { useCameraPreview } from "../hooks/useCameraPreview";
+import { useMediaRecorder } from "../hooks/useMediaRecorder";
+import { useStartCandidateCase, useSubmitVideoAnswer } from "../hooks/useCase";
 
-const PREPARATION_SECONDS = 10;
-const RECORDING_SECONDS = 90;
-const RETAKES_ALLOWED = 1;
+type Phase = "preview" | "preparing" | "recording" | "review" | "submitted";
 
-type Phase = "preview" | "preparing" | "recording" | "review";
-
+/**
+ * Reached via its own direct link (`/video-interview/:positionId`), not chained after
+ * the bot chat — there's no stage-orchestration concept anywhere in this codebase yet
+ * that would drive "what a candidate does next" (see the grilled Stage 9 plan). Mints
+ * its own candidateId the same way ApplyPage does, since it's a standalone entry point.
+ */
 export function VideoInterviewPage() {
   const { t } = useTranslation();
-  const { videoRef, status, errorMessage } = useCameraPreview();
+  const { show } = useToast();
+  const { positionId } = useParams<{ positionId: string }>();
+  const [candidateId] = useState(() => crypto.randomUUID());
+
+  const { videoRef, streamRef, status, errorMessage } = useCameraPreview();
+  const mediaRecorder = useMediaRecorder(streamRef);
+
   const [phase, setPhase] = useState<Phase>("preview");
-  const [secondsLeft, setSecondsLeft] = useState(PREPARATION_SECONDS);
+  const [secondsLeft, setSecondsLeft] = useState(0);
   const [retakesUsed, setRetakesUsed] = useState(0);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+
+  const startCase = useStartCandidateCase();
+  const hasStarted = useRef(false);
+
+  useEffect(() => {
+    if (hasStarted.current || !positionId) return;
+    hasStarted.current = true;
+
+    startCase.mutate({ positionId, candidateId }, { onError: (error) => show(toApiError(error).title, "error") });
+  }, [positionId, candidateId, startCase, show]);
+
+  const caseResult = startCase.data;
+  const submitAnswer = useSubmitVideoAnswer(caseResult?.caseId ?? "");
 
   useEffect(() => {
     if (phase !== "preparing" && phase !== "recording") return;
@@ -24,31 +50,56 @@ export function VideoInterviewPage() {
         if (current > 1) return current - 1;
 
         if (phase === "preparing") {
+          mediaRecorder.start();
           setPhase("recording");
-          return RECORDING_SECONDS;
+          return caseResult?.recordingTimeSeconds ?? 90;
         }
 
+        mediaRecorder.stop().then(setRecordedBlob);
         setPhase("review");
         return 0;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [phase]);
+  }, [phase, mediaRecorder, caseResult]);
 
   const startPreparation = () => {
-    setSecondsLeft(PREPARATION_SECONDS);
+    setSecondsLeft(caseResult?.preparationTimeSeconds ?? 10);
     setPhase("preparing");
   };
 
-  const stopRecording = () => setPhase("review");
+  const stopRecording = () => {
+    mediaRecorder.stop().then(setRecordedBlob);
+    setPhase("review");
+  };
 
   const retake = () => {
     setRetakesUsed((count) => count + 1);
+    setRecordedBlob(null);
     setPhase("preview");
   };
 
-  const retakesRemaining = RETAKES_ALLOWED - retakesUsed;
+  const submit = async () => {
+    if (!caseResult || !recordedBlob) return;
+    try {
+      const file = new File([recordedBlob], "answer.webm", { type: recordedBlob.type || "video/webm" });
+      await submitAnswer.mutateAsync({ stepId: caseResult.stepId, file });
+      setPhase("submitted");
+    } catch (error) {
+      show(toApiError(error).title, "error");
+    }
+  };
+
+  const retakesRemaining = (caseResult?.retakesAllowed ?? 0) - retakesUsed;
+
+  if (!positionId) {
+    return <p className="mx-auto mt-8 max-w-lg text-sm text-slate-500">{t("apply.missingPosition")}</p>;
+  }
+
+  if (phase === "submitted") {
+    return <p className="mx-auto mt-8 max-w-lg text-sm text-slate-600">{t("videoInterview.submitted")}</p>;
+  }
 
   return (
     <div className="mx-auto flex h-dvh max-w-lg flex-col gap-4 p-4">
@@ -88,7 +139,7 @@ export function VideoInterviewPage() {
 
       <div className="flex flex-col items-center gap-2">
         {phase === "preview" && (
-          <Button onClick={startPreparation} disabled={status !== "ready"}>
+          <Button onClick={startPreparation} disabled={status !== "ready" || !caseResult}>
             {t("videoInterview.startRecording")}
           </Button>
         )}
@@ -110,7 +161,9 @@ export function VideoInterviewPage() {
                   {t("videoInterview.retake")}
                 </Button>
               )}
-              <Button>{t("common.submit")}</Button>
+              <Button onClick={submit} disabled={submitAnswer.isPending || !recordedBlob}>
+                {submitAnswer.isPending ? t("videoInterview.submitting") : t("common.submit")}
+              </Button>
             </div>
           </div>
         )}

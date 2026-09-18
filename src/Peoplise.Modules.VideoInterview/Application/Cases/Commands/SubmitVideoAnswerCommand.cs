@@ -63,12 +63,27 @@ public sealed class SubmitVideoAnswerCommandHandler : IRequestHandler<SubmitVide
 
         var videoUrl = await _fileStorage.UploadAsync(request.VideoContent, request.FileName, request.ContentType, cancellationToken);
 
-        var result = @case.RecordVideoAnswer(request.StepId, videoUrl, project.RetakesAllowed, DateTimeOffset.UtcNow);
+        var now = DateTimeOffset.UtcNow;
+        var result = @case.RecordVideoAnswer(request.StepId, videoUrl, project.RetakesAllowed, now);
         if (result.IsFailure)
         {
             // Compensate: don't leave an orphaned file behind for a rejected retake.
             await _fileStorage.DeleteAsync(videoUrl, cancellationToken);
             return result;
+        }
+
+        // There's no per-turn "what's next" round trip here (unlike HrBot's branching
+        // conversations): a case-bot flow is a fixed linear sequence with no server-side
+        // step advancement, so the flow's last step being answered is what closes the
+        // case — completion applied inline, same as HrBot closes a conversation inline
+        // in ProcessUserResponseCommandHandler rather than via a separate call.
+        var flow = project.FindFlow(@case.CurrentFlowId);
+        var isLastStep = flow is not null && flow.Steps.OrderBy(s => s.Order).LastOrDefault()?.Id == request.StepId;
+        if (isLastStep)
+        {
+            var completeResult = @case.Complete(now);
+            if (completeResult.IsFailure)
+                return completeResult;
         }
 
         // Dispatched from UnitOfWork.SaveChangesAsync: the VideoRecordedEvent this just

@@ -1,8 +1,14 @@
 import { httpClient } from "../http";
-import type { CandidateComparisonItem, CaseReport, CodeReviewResult, StartCandidateCaseRequest } from "../types";
+import type {
+  CandidateComparisonItem,
+  CaseReport,
+  CodeReviewResult,
+  StartCandidateCaseRequest,
+  StartCandidateCaseResult,
+} from "../types";
 
-export async function startCandidateCase(request: StartCandidateCaseRequest): Promise<{ id: string }> {
-  const { data } = await httpClient.post<{ id: string }>("/api/cases", request);
+export async function startCandidateCase(request: StartCandidateCaseRequest): Promise<StartCandidateCaseResult> {
+  const { data } = await httpClient.post<StartCandidateCaseResult>("/api/cases", request);
   return data;
 }
 
