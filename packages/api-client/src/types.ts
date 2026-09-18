@@ -119,15 +119,42 @@ export interface SubmitEvaluationRequest {
 export type ConversationInterface = "WebChat" | "FacebookMessenger";
 export type ConversationStatus = "InProgress" | "Completed" | "ScreenedOut" | "TimedOut";
 
+export type StepType =
+  | "SendMessage"
+  | "SendQuickReply"
+  | "WaitResponse"
+  | "SendImage"
+  | "SendVideo"
+  | "SendEmail"
+  | "SwitchFlow"
+  | "FaqEngine"
+  | "CallWebHook";
+
+/** What's needed to render the step a conversation is currently sitting on. */
+export interface ConversationStepContent {
+  stepId: string;
+  type: StepType;
+  content: string;
+  quickReplyOptions: string[];
+  isFinalStep: boolean;
+}
+
+/** Keyed by positionId, not botProjectId — the candidate app has no reason to know a BotProject exists as its own concept. */
 export interface StartConversationRequest {
-  botProjectId: string;
+  positionId: string;
   candidateId: string;
   interface: ConversationInterface;
 }
 
+export interface StartConversationResult {
+  conversationId: string;
+  currentStep: ConversationStepContent;
+}
+
 export interface ProcessUserResponseResult {
   status: ConversationStatus;
-  nextStepId: string | null;
+  /** Null once the conversation has ended — there's no further step to render. */
+  currentStep: ConversationStepContent | null;
   routeMatched: boolean;
   faqAnswer: string | null;
 }

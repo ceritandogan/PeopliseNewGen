@@ -6,6 +6,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Microsoft.EntityFrameworkCore;
+using Peoplise.Api;
 using Peoplise.Api.Middleware;
 using Peoplise.Infrastructure;
 using Peoplise.Infrastructure.Persistence;
@@ -130,6 +131,7 @@ if (app.Environment.IsDevelopment())
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await context.Database.MigrateAsync();
     await DatabaseSeeder.SeedAsync(context);
+    await DemoDataSeeder.SeedAsync(context);
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();

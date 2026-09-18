@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Button, Card, CardHeader, CardTitle, Input, useToast } from "@peoplise/ui";
+import { Button, Input, useToast } from "@peoplise/ui";
 import { toApiError } from "@peoplise/api-client";
 import { useSubmitApplication } from "../hooks/useApply";
 
@@ -27,8 +28,13 @@ type ApplyForm = z.infer<typeof applySchema>;
 export function ApplyPage() {
   const { t } = useTranslation();
   const { positionId } = useParams<{ positionId: string }>();
+  const navigate = useNavigate();
   const { show } = useToast();
   const submitApplication = useSubmitApplication();
+
+  // Generated once per visit (not per submit) so the same id is available both in the
+  // request payload and, on success, in the redirect into the bot chat.
+  const [candidateId] = useState(() => crypto.randomUUID());
 
   const {
     register,
@@ -40,13 +46,14 @@ export function ApplyPage() {
     if (!positionId) return;
     try {
       await submitApplication.mutateAsync({
-        candidateId: crypto.randomUUID(),
+        candidateId,
         positionId,
         candidateName: values.candidateName,
         candidateEmail: values.candidateEmail,
         candidatePhone: values.candidatePhone || undefined,
         resumeUrl: values.resumeUrl || undefined,
       });
+      navigate(`/bot-chat/${positionId}`, { state: { candidateId } });
     } catch (error) {
       show(toApiError(error).title, "error");
     }
@@ -54,19 +61,6 @@ export function ApplyPage() {
 
   if (!positionId) {
     return <p className="mx-auto mt-8 max-w-lg text-sm text-slate-500">{t("apply.missingPosition")}</p>;
-  }
-
-  if (submitApplication.isSuccess) {
-    return (
-      <div className="mx-auto mt-8 max-w-lg p-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("apply.thankYouTitle")}</CardTitle>
-          </CardHeader>
-          <p className="text-sm text-slate-600">{t("apply.thankYouBody")}</p>
-        </Card>
-      </div>
-    );
   }
 
   return (

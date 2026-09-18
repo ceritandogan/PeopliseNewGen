@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.19" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
@@ -21,6 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- StartConversationCommandHandler reads BotProject by PositionId directly via
+         AppDbContext (beyond IRepository's by-id contract — see its own remarks), so
+         testing it needs a real (InMemory) AppDbContext rather than a mockable repository. -->
+    <ProjectReference Include="..\..\src\Peoplise.Infrastructure\Peoplise.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Peoplise.Modules.HrBot\Peoplise.Modules.HrBot.csproj" />
     <ProjectReference Include="..\..\src\Peoplise.SharedKernel\Peoplise.SharedKernel.csproj" />
   </ItemGroup>

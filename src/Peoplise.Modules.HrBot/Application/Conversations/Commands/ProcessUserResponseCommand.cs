@@ -13,7 +13,7 @@ public sealed record ProcessUserResponseCommand(Guid ConversationId, string? Res
 
 public sealed record ProcessUserResponseResult(
     ConversationStatus Status,
-    Guid? NextStepId,
+    ConversationStepContent? CurrentStep,
     bool RouteMatched,
     string? FaqAnswer);
 
@@ -90,8 +90,18 @@ public sealed class ProcessUserResponseCommandHandler : IRequestHandler<ProcessU
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Only In Progress conversations have a step left to render — Completed/
+        // ScreenedOut/TimedOut leave CurrentStepId pointing at whatever step ended
+        // things, which was already shown to the candidate on a prior turn.
+        var resolvedStep = conversation.Status == ConversationStatus.InProgress
+            ? botProject.FindFlow(conversation.CurrentFlowId)?.FindStep(conversation.CurrentStepId ?? Guid.Empty)
+            : null;
+
         return Result.Success(new ProcessUserResponseResult(
-            conversation.Status, conversation.CurrentStepId, decision.Outcome != ConversationOutcome.NoMatch, faqAnswer));
+            conversation.Status,
+            resolvedStep is null ? null : ConversationStepMapper.ToContent(resolvedStep),
+            decision.Outcome != ConversationOutcome.NoMatch,
+            faqAnswer));
     }
 
     private static string? HandleFaqLookup(Conversation conversation, Knowledgebase knowledgebase, string? response)

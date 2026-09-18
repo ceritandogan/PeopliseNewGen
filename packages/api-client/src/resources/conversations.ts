@@ -1,8 +1,13 @@
 import { httpClient } from "../http";
-import type { ConversationHistory, ProcessUserResponseResult, StartConversationRequest } from "../types";
+import type {
+  ConversationHistory,
+  ProcessUserResponseResult,
+  StartConversationRequest,
+  StartConversationResult,
+} from "../types";
 
-export async function startConversation(request: StartConversationRequest): Promise<{ id: string }> {
-  const { data } = await httpClient.post<{ id: string }>("/api/conversations", request);
+export async function startConversation(request: StartConversationRequest): Promise<StartConversationResult> {
+  const { data } = await httpClient.post<StartConversationResult>("/api/conversations", request);
   return data;
 }
 
