@@ -2,19 +2,25 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 import { type AuthSession, useAuthStore } from "../stores/authStore";
 
 /**
- * The two HTTP calls AuthProvider needs, injected rather than imported directly from
+ * The HTTP calls AuthProvider needs, injected rather than imported directly from
  * `@peoplise/api-client`: keeps this package free of a dependency on a specific backend
- * client, and makes the provider trivially testable with a fake adapter.
+ * client, and makes the provider trivially testable with a fake adapter. Login is two
+ * phases, not one call, because it's a redirect: `beginLogin` navigates the whole page
+ * away and never resolves in practice; `completeLogin` runs on the callback page once
+ * the browser lands back with an authorization code. See ADR 0002.
  */
 export interface AuthAdapter {
-  login: (email: string, password: string) => Promise<AuthSession>;
+  beginLogin: (returnTo: string) => Promise<void>;
+  completeLogin: (params: URLSearchParams) => Promise<{ session: AuthSession; returnTo: string }>;
   refresh: (refreshToken: string) => Promise<AuthSession>;
+  logout: () => Promise<void>;
 }
 
 interface AuthContextValue {
   session: AuthSession | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  beginLogin: (returnTo: string) => Promise<void>;
+  completeLogin: (params: URLSearchParams) => Promise<string>;
   logout: () => void;
 }
 
@@ -56,19 +62,25 @@ export function AuthProvider({ children, adapter }: AuthProviderProps) {
     return () => clearTimeout(timer);
   }, [session, adapter, setSession, clearSession]);
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const next = await adapter.login(email, password);
+  const beginLogin = useCallback((returnTo: string) => adapter.beginLogin(returnTo), [adapter]);
+
+  const completeLogin = useCallback(
+    async (params: URLSearchParams) => {
+      const { session: next, returnTo } = await adapter.completeLogin(params);
       setSession(next);
+      return returnTo;
     },
     [adapter, setSession],
   );
 
-  const logout = useCallback(() => clearSession(), [clearSession]);
+  const logout = useCallback(() => {
+    clearSession();
+    void adapter.logout();
+  }, [adapter, clearSession]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ session, isAuthenticated: session !== null, login, logout }),
-    [session, login, logout],
+    () => ({ session, isAuthenticated: session !== null, beginLogin, completeLogin, logout }),
+    [session, beginLogin, completeLogin, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -7,6 +7,7 @@ import { PositionDetailPage } from "./pages/PositionDetailPage";
 import { CandidatePipelinePage } from "./pages/CandidatePipelinePage";
 import { CandidateDetailPage } from "./pages/CandidateDetailPage";
 import { LoginPage } from "./pages/LoginPage";
+import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { ForbiddenPage } from "./pages/ForbiddenPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
@@ -14,6 +15,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/forbidden" element={<ForbiddenPage />} />
 
       <Route element={<ProtectedRoute />}>

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Peoplise.Api;
 using Peoplise.Api.Middleware;
 using Peoplise.Infrastructure;
+using Peoplise.Infrastructure.Identity;
 using Peoplise.Infrastructure.Persistence;
 using Peoplise.Modules.ATS.Application.Positions.Commands;
 using Peoplise.Modules.HrBot.Application.Conversations.Commands;
@@ -73,6 +74,7 @@ builder.Services.AddSwaggerGen(options =>
 // reflection, without ever referencing the module directly (see ModuleAssemblyRegistry).
 builder.Services.AddInfrastructure(
     builder.Configuration,
+    builder.Environment,
     typeof(CreatePositionCommand).Assembly,
     typeof(StartConversationCommand).Assembly,
     typeof(CreateCaseBotProjectCommand).Assembly);
@@ -132,6 +134,14 @@ if (app.Environment.IsDevelopment())
     await context.Database.MigrateAsync();
     await DatabaseSeeder.SeedAsync(context);
     await DemoDataSeeder.SeedAsync(context);
+}
+
+// Unlike the block above, this runs in every environment: without a registered
+// OpenIddict client the app has no way to log in anywhere at all (see ADR 0002).
+// Idempotent, so it's safe to run on every startup of every replica.
+{
+    using var scope = app.Services.CreateScope();
+    await OpenIddictClientSeeder.SeedAsync(scope.ServiceProvider, app.Configuration);
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();

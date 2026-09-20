@@ -1,11 +1,15 @@
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using OpenIddict.Validation.AspNetCore;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 using Peoplise.Infrastructure.AI;
 using Peoplise.Infrastructure.Events;
 using Peoplise.Infrastructure.Identity;
@@ -44,14 +48,22 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration,
+        IHostEnvironment environment,
         params Assembly[] moduleAssemblies)
     {
         var registry = new ModuleAssemblyRegistry(moduleAssemblies);
         services.AddSingleton(registry);
 
+        // "Testing" (the WebApplicationFactory-based integration test host, see
+        // Peoplise.Api.Tests.ApiTestFactory) gets the same dev-only auth fallbacks as
+        // Development — ephemeral certs, no HTTPS requirement — without also tripping
+        // Program.cs's IsDevelopment()-gated migration/seed block, which assumes a real
+        // relational database the in-memory test host doesn't have.
+        var useDevelopmentAuthDefaults = environment.IsDevelopment() || environment.IsEnvironment("Testing");
+
         services.AddPersistence(configuration);
         services.AddDomainEvents(registry);
-        services.AddAuth();
+        services.AddAuth(configuration, useDevelopmentAuthDefaults);
         services.AddMediaAndAI();
 
         return services;
@@ -123,14 +135,10 @@ public static class DependencyInjection
     /// OpenIddict as a self-hosted authorization server (issues tokens) *and* resource
     /// server (validates them), both inside this same API Gateway process — deliberately
     /// not hand-rolled JWT signing/validation (see the architecture doc's rationale).
+    /// Authorization Code + PKCE is the only interactive grant (see ADR 0002 for why ROPC
+    /// was removed rather than kept alongside it); refresh_token stays for silent renewal.
     /// </summary>
-    /// <remarks>
-    /// Two things are intentionally left as placeholders here, both flagged with TODOs:
-    /// the resource-owner-password-credentials grant, and the development-only signing
-    /// certificate. Both are fine for building out the panel/candidate apps against a
-    /// first-party API, but neither belongs in production as-is — see the TODOs.
-    /// </remarks>
-    private static IServiceCollection AddAuth(this IServiceCollection services)
+    private static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
     {
         services.AddOpenIddict()
             .AddCore(options =>
@@ -139,42 +147,62 @@ public static class DependencyInjection
             })
             .AddServer(options =>
             {
+                options.SetAuthorizationEndpointUris("connect/authorize");
                 options.SetTokenEndpointUris("connect/token");
 
-                // TODO(auth): ROPC (password grant) is used because both first-party
-                // clients (panel, candidate app) are built and controlled by this team
-                // and there's no third-party client yet. Once a browser-based login UI
-                // exists, migrate panel/candidate to Authorization Code + PKCE instead —
-                // ROPC means the client handles the user's raw password, which is only
-                // acceptable for fully first-party, fully trusted clients.
-                options.AllowPasswordFlow();
+                options.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
                 options.AllowRefreshTokenFlow();
 
-                // The panel/candidate apps are first-party, trusted clients with no
-                // OpenIddict client registration of their own (no client_id/secret) —
-                // this accepts token requests without one, appropriate only because
-                // every caller is code we control (see the ROPC TODO above).
-                options.AcceptAnonymousClients();
+                options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.OfflineAccess);
+
+                // Unconfigured before this — OpenIddict's library defaults applied
+                // silently. Pinned explicitly now that a real deployment is in view.
+                options.SetAccessTokenLifetime(TimeSpan.FromHours(1));
+                options.SetIdentityTokenLifetime(TimeSpan.FromMinutes(5));
+                options.SetRefreshTokenLifetime(TimeSpan.FromDays(14));
 
                 // OpenIddict rotates refresh tokens and rejects a reused/revoked one by
                 // default — the "custom JWT" risk flagged in the architecture review
                 // (hand-rolled refresh rotation/reuse detection) is handled by the
                 // library, not by code in this solution.
 
-                // TODO(auth): development-only certificates. Replace with a real
-                // signing/encryption certificate (or a managed key store) before any
-                // non-local deployment — these are regenerated on every restart and are
-                // not intended to ever hold production tokens.
-                options.AddDevelopmentEncryptionCertificate()
-                    .AddDevelopmentSigningCertificate();
+                // Real cert/key store, generic and swappable rather than tied to one
+                // cloud provider's KMS — a file path + password sourced from config
+                // (env-var-backed in any real deployment, following the same convention
+                // as ConnectionStrings:Default). Falls back to OpenIddict's ephemeral
+                // development certificates only in Development, and refuses to start
+                // without real ones anywhere else.
+                var certificates = configuration.GetSection("Auth:Certificates");
+                var signingPath = certificates["SigningCertificatePath"];
+                var encryptionPath = certificates["EncryptionCertificatePath"];
 
-                // TODO(auth): local HTTP-only dev. Remove DisableTransportSecurityRequirement()
-                // once this runs behind HTTPS anywhere but a local machine — OpenIddict
-                // requires HTTPS by default specifically because a bearer token sent over
-                // plain HTTP is trivially interceptable.
-                options.UseAspNetCore()
-                    .EnableTokenEndpointPassthrough()
-                    .DisableTransportSecurityRequirement();
+                if (!string.IsNullOrEmpty(signingPath) && !string.IsNullOrEmpty(encryptionPath))
+                {
+                    options.AddSigningCertificate(
+                        X509CertificateLoader.LoadPkcs12FromFile(signingPath, certificates["SigningCertificatePassword"]));
+                    options.AddEncryptionCertificate(
+                        X509CertificateLoader.LoadPkcs12FromFile(encryptionPath, certificates["EncryptionCertificatePassword"]));
+                }
+                else if (isDevelopment)
+                {
+                    options.AddDevelopmentEncryptionCertificate().AddDevelopmentSigningCertificate();
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        "Auth:Certificates:SigningCertificatePath and EncryptionCertificatePath must be configured outside Development.");
+                }
+
+                var aspNetCore = options.UseAspNetCore()
+                    .EnableAuthorizationEndpointPassthrough()
+                    .EnableTokenEndpointPassthrough();
+
+                // TODO(auth): local HTTP-only dev only. OpenIddict requires HTTPS by
+                // default specifically because a bearer token sent over plain HTTP is
+                // trivially interceptable — this must stay enabled everywhere but a
+                // local machine.
+                if (isDevelopment)
+                    aspNetCore.DisableTransportSecurityRequirement();
             })
             .AddValidation(options =>
             {
@@ -186,9 +214,21 @@ public static class DependencyInjection
             });
 
         services.AddAuthentication(options =>
-        {
-            options.DefaultScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-        });
+            {
+                options.DefaultScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+            })
+            // Backs only the server-hosted `/connect/login` page (see AuthorizationController
+            // and ADR 0002) — every other endpoint keeps validating Bearer tokens via the
+            // default scheme above; this is never the default.
+            .AddCookie(AuthCookieDefaults.Scheme, options =>
+            {
+                options.LoginPath = AuthCookieDefaults.LoginPath;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                options.SlidingExpiration = true;
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = isDevelopment ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+            });
 
         services.AddAuthorization();
 

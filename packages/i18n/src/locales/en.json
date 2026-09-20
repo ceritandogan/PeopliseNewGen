@@ -20,6 +20,7 @@
   },
   "auth": {
     "signIn": "Sign in",
+    "signingIn": "Signing you in…",
     "signOut": "Sign out",
     "email": "Email",
     "password": "Password",

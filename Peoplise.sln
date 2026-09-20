@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peoplise.Modules.HrBot.Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peoplise.Modules.VideoInterview.Tests", "tests\Peoplise.Modules.VideoInterview.Tests\Peoplise.Modules.VideoInterview.Tests.csproj", "{DB177FE1-FD13-42A1-9F28-2FAADB3097A4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peoplise.Api.Tests", "tests\Peoplise.Api.Tests\Peoplise.Api.Tests.csproj", "{EE476D85-833E-460D-9ED7-21CBE5651C2C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -171,6 +173,18 @@ Global
 		{DB177FE1-FD13-42A1-9F28-2FAADB3097A4}.Release|x64.Build.0 = Release|Any CPU
 		{DB177FE1-FD13-42A1-9F28-2FAADB3097A4}.Release|x86.ActiveCfg = Release|Any CPU
 		{DB177FE1-FD13-42A1-9F28-2FAADB3097A4}.Release|x86.Build.0 = Release|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Debug|x64.Build.0 = Debug|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Debug|x86.Build.0 = Debug|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Release|x64.ActiveCfg = Release|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Release|x64.Build.0 = Release|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Release|x86.ActiveCfg = Release|Any CPU
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -187,5 +201,6 @@ Global
 		{63264AF6-F1AC-47BB-8C46-4B38531797AB} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{D8EDAD81-0DF6-421F-8C3E-5E8C038C0873} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{DB177FE1-FD13-42A1-9F28-2FAADB3097A4} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{EE476D85-833E-460D-9ED7-21CBE5651C2C} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
