@@ -53,7 +53,7 @@ public class StartConversationCommandHandlerTests
     {
         var (context, tenantId, _, _, handler) = CreateHandler();
         var positionId = Guid.NewGuid();
-        var project = BotProject.Create("Screening Bot", positionId);
+        var project = BotProject.Create("Screening Bot", positionId, retentionPeriodDays: 90).Value;
         project.TenantId = tenantId;
         context.Set<BotProject>().Add(project);
         await context.SaveChangesAsync();
@@ -70,7 +70,7 @@ public class StartConversationCommandHandlerTests
     {
         var (context, tenantId, conversations, unitOfWork, handler) = CreateHandler();
         var positionId = Guid.NewGuid();
-        var project = BotProject.Create("Screening Bot", positionId);
+        var project = BotProject.Create("Screening Bot", positionId, retentionPeriodDays: 90).Value;
         project.TenantId = tenantId;
         var flow = project.AddFlow("Main Flow", isDefault: true).Value;
         var firstStep = flow.AddStep(StepType.SendMessage, "Welcome!", order: 0).Value;

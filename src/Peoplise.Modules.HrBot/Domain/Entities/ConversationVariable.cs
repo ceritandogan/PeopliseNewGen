@@ -20,4 +20,7 @@ public sealed class ConversationVariable : BaseEntity<Guid>
         Value = value;
         CapturedAt = capturedAt;
     }
+
+    /// <summary>KVKK anonymization: a captured answer (salary expectation, location, ...) IS personal data itself, not a derived statistic — Key/CapturedAt stay, Value doesn't.</summary>
+    public void ClearValue() => Value = string.Empty;
 }

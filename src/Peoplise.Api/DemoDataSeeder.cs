@@ -37,7 +37,7 @@ public static class DemoDataSeeder
         workflow.AddStage("Application Review", StageType.ReviewerApproval, order: 0);
         position.AssignWorkflow(workflow.Id);
 
-        var botProject = BotProject.Create("HR Bot Demo — Backend Engineer Screening", position.Id.Value);
+        var botProject = BotProject.Create("HR Bot Demo — Backend Engineer Screening", position.Id.Value, retentionPeriodDays: 90).Value;
         var flow = botProject.AddFlow("Pre-screening", isDefault: true).Value;
 
         // Built end-to-front so each step can route to one already created by id.

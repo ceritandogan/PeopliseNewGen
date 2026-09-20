@@ -38,13 +38,15 @@ public enum StepRouteType
     EndConversation,
 }
 
-/// <summary>Devam Ediyor / Tamamlandı / Elendi / Zaman Aşımı.</summary>
+/// <summary>Devam Ediyor / Tamamlandı / Elendi / Zaman Aşımı / (KVKK) Rıza Geri Çekildi / Saklama Süresi Doldu.</summary>
 public enum ConversationStatus
 {
     InProgress,
     Completed,
     ScreenedOut,
     TimedOut,
+    ConsentWithdrawn,
+    RetentionExpired,
 }
 
 /// <summary>Which channel the candidate is talking to the bot through.</summary>

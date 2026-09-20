@@ -60,5 +60,22 @@ public sealed class ConversationsController : ControllerBase
         return result.ToActionResult(this);
     }
 
+    /// <summary>
+    /// KVKK: an HR/panel user acting on a candidate's consent-withdrawal request,
+    /// mirroring <see cref="CasesController"/>'s withdraw-consent endpoint (see
+    /// docs/adr/0001 and 0003). Authenticated like the rest of this controller's
+    /// non-candidate-facing routes.
+    /// </summary>
+    [HttpPost("{conversationId:guid}/withdraw-consent")]
+    public async Task<IActionResult> WithdrawConsent(
+        Guid conversationId, WithdrawConversationConsentRequest request, CancellationToken cancellationToken)
+    {
+        var command = new RequestConversationDataDeletionCommand(conversationId, ConversationDataDeletionReason.ConsentWithdrawn, request.Reason);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
     public sealed record RespondRequest(string? Response);
 }
+
+public sealed record WithdrawConversationConsentRequest(string? Reason);

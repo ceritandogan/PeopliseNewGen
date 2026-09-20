@@ -18,6 +18,7 @@ public sealed class BotProjectConfiguration : IEntityTypeConfiguration<BotProjec
 
         builder.Property(p => p.Name).IsRequired().HasMaxLength(200);
         builder.Property(p => p.PositionId).IsRequired();
+        builder.Property(p => p.RetentionPeriodDays).IsRequired();
 
         // Flow → Step → StepRoute: a three-level owned collection. Each level only
         // means something in the context of its parent, which is exactly what "owned"

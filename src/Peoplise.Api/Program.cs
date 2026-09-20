@@ -7,6 +7,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Microsoft.EntityFrameworkCore;
 using Peoplise.Api;
+using Peoplise.Api.BackgroundJobs;
 using Peoplise.Api.Middleware;
 using Peoplise.Infrastructure;
 using Peoplise.Infrastructure.Identity;
@@ -84,6 +85,10 @@ builder.Services.AddInfrastructure(
 // reflection-based scanning can't wire up on its own. See
 // Peoplise.Modules.VideoInterview.DependencyInjection.
 builder.Services.AddVideoInterviewModule();
+
+// Lives here, not inside either module, because it sweeps both VideoInterview's Case
+// and HrBot's Conversation — see ADR 0003.
+builder.Services.AddHostedService<RetentionExpiryBackgroundService>();
 
 builder.Services.AddCors(options =>
 {

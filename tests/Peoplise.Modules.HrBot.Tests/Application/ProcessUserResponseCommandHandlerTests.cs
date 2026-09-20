@@ -27,7 +27,7 @@ public class ProcessUserResponseCommandHandlerTests
 
     private static (BotProject Project, Flow Flow, Step CaptureStep, Step NextStep) BuildProjectWithCaptureStep()
     {
-        var project = BotProject.Create("Screening Bot", Guid.NewGuid());
+        var project = BotProject.Create("Screening Bot", Guid.NewGuid(), retentionPeriodDays: 90).Value;
         var flow = project.AddFlow("Main Flow", isDefault: true).Value;
         var nextStep = flow.AddStep(StepType.SendMessage, "Thanks!", order: 1, isFinalStep: true).Value;
         var captureStep = flow.AddStep(
@@ -77,7 +77,7 @@ public class ProcessUserResponseCommandHandlerTests
     public async Task Screens_out_the_candidate_when_the_route_leads_to_a_screen_out_final_step()
     {
         var (conversations, botProjects, _, handler) = CreateHandler();
-        var project = BotProject.Create("Screening Bot", Guid.NewGuid());
+        var project = BotProject.Create("Screening Bot", Guid.NewGuid(), retentionPeriodDays: 90).Value;
         var flow = project.AddFlow("Main Flow", isDefault: true).Value;
         var screenOutStep = flow.AddStep(StepType.SendMessage, "Sorry, not a fit.", order: 1, isFinalStep: true, isScreenOut: true).Value;
         var askStep = flow.AddStep(StepType.SendQuickReply, "Willing to relocate?", order: 0).Value;
@@ -104,7 +104,7 @@ public class ProcessUserResponseCommandHandlerTests
     public async Task Logs_an_unmatched_question_at_a_FaqEngine_step_when_the_knowledgebase_has_no_match()
     {
         var (conversations, botProjects, _, handler) = CreateHandler();
-        var project = BotProject.Create("Screening Bot", Guid.NewGuid());
+        var project = BotProject.Create("Screening Bot", Guid.NewGuid(), retentionPeriodDays: 90).Value;
         var flow = project.AddFlow("Main Flow", isDefault: true).Value;
         var faqStep = flow.AddStep(StepType.FaqEngine, "Ask me anything", order: 0).Value;
         faqStep.AddRoute(StepRoute.ToStep(ConditionType.NoCondition, [], faqStep.Id));
@@ -126,7 +126,7 @@ public class ProcessUserResponseCommandHandlerTests
     public async Task Returns_the_matched_answer_at_a_FaqEngine_step_when_the_knowledgebase_has_a_match()
     {
         var (conversations, botProjects, _, handler) = CreateHandler();
-        var project = BotProject.Create("Screening Bot", Guid.NewGuid());
+        var project = BotProject.Create("Screening Bot", Guid.NewGuid(), retentionPeriodDays: 90).Value;
         var answer = new KnowledgebaseAnswer(Guid.NewGuid(), "Yes, we sponsor work visas.");
         project.Knowledgebase.AddQuestion(new KnowledgebaseQuestion(Guid.NewGuid(), "Visa sponsorship?", ["visa"], answer));
         var flow = project.AddFlow("Main Flow", isDefault: true).Value;

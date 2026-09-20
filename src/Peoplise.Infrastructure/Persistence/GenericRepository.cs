@@ -35,7 +35,16 @@ public sealed class GenericRepository<TAggregateRoot, TId> : IRepository<TAggreg
         if (ignoreQueryFilters)
             query = query.IgnoreQueryFilters();
 
-        return await query.Where(predicate).ToListAsync(cancellationToken);
+        // Unlike GetByIdAsync (one row), this can return many aggregates at once, each
+        // with its own owned collections auto-included by EF Core. SingleQuery mode
+        // cross-joins every owned collection into one flattened result set — fine for
+        // one row, but caught live for multiple rows with unevenly-populated
+        // collections (some with data, some with none): EF Core mis-grouped which
+        // joined row belonged to which collection and threw reading a NULL key column
+        // as a non-nullable Guid. AsSplitQuery avoids the cartesian join entirely, at
+        // the cost of one query per collection instead of one query total — the right
+        // tradeoff for a background sweep, not a hot request path.
+        return await query.Where(predicate).AsSplitQuery().ToListAsync(cancellationToken);
     }
 
     public async Task AddAsync(TAggregateRoot aggregate, CancellationToken cancellationToken = default) =>

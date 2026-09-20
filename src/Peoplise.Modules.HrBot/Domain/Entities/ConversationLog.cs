@@ -20,4 +20,7 @@ public sealed class ConversationLog : BaseEntity<Guid>
         CandidateResponse = candidateResponse;
         LoggedAt = loggedAt;
     }
+
+    /// <summary>KVKK anonymization: the candidate's own words are personal data — StepId/LoggedAt stay, for the transcript's shape without its content.</summary>
+    public void ClearResponse() => CandidateResponse = null;
 }

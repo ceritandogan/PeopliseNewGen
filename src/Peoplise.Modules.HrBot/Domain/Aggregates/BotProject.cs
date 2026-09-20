@@ -22,6 +22,9 @@ public sealed class BotProject : AggregateRoot<BotProjectId>, IHasTenant, IAudit
     public Guid PositionId { get; private set; }
     public Knowledgebase Knowledgebase { get; private set; } = null!;
 
+    /// <summary>KVKK: days after which a conversation's identity/content is auto-anonymized. Mirrors VideoInterview's CaseBotProject.RetentionPeriodDays.</summary>
+    public int RetentionPeriodDays { get; private set; }
+
     public IReadOnlyCollection<Flow> Flows => _flows.AsReadOnly();
     public IReadOnlyCollection<ProjectVariable> Variables => _variables.AsReadOnly();
 
@@ -37,19 +40,23 @@ public sealed class BotProject : AggregateRoot<BotProjectId>, IHasTenant, IAudit
         // Reserved for EF Core materialization.
     }
 
-    private BotProject(BotProjectId id, string name, Guid positionId) : base(id)
+    private BotProject(BotProjectId id, string name, Guid positionId, int retentionPeriodDays) : base(id)
     {
         Name = name;
         PositionId = positionId;
+        RetentionPeriodDays = retentionPeriodDays;
         Knowledgebase = new Knowledgebase(Guid.NewGuid());
     }
 
-    public static BotProject Create(string name, Guid positionId)
+    public static Result<BotProject> Create(string name, Guid positionId, int retentionPeriodDays)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("A bot project must have a name.", nameof(name));
 
-        return new BotProject(BotProjectId.New(), name, positionId);
+        if (retentionPeriodDays <= 0)
+            return Result.Failure<BotProject>(Error.Validation("BotProject.InvalidRetentionPeriod", "The retention period must be positive."));
+
+        return Result.Success(new BotProject(BotProjectId.New(), name, positionId, retentionPeriodDays));
     }
 
     /// <summary>Adds a flow. Exactly one flow may be marked default — the one a new conversation starts on.</summary>

@@ -86,6 +86,61 @@ public sealed class Conversation : AggregateRoot<ConversationId>, IHasTenant, IA
         _variables.Add(new ConversationVariable(Guid.NewGuid(), key, value, capturedAt));
     }
 
+    public Result WithdrawConsent(string reason, DateTimeOffset now)
+    {
+        if (!IsOpen)
+            return Result.Failure(Error.Conflict("Conversation.AlreadyClosed", "This conversation has already ended."));
+
+        AnonymizeIdentityAndContent();
+        Status = ConversationStatus.ConsentWithdrawn;
+        CompletedAt = now;
+        Raise(new ConsentWithdrawnEvent(Id, reason));
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Unlike <see cref="WithdrawConsent"/>, this is expected to run on an already
+    /// <see cref="ConversationStatus.Completed"/>/<see cref="ConversationStatus.ScreenedOut"/>/
+    /// <see cref="ConversationStatus.TimedOut"/> conversation — that's the common case a
+    /// retention sweep targets — so it only rejects a conversation whose data is already
+    /// anonymized, not every non-open one. Mirrors the fix applied to VideoInterview's
+    /// <c>Case.ExpireRetention</c> (see docs/adr/0001).
+    /// </summary>
+    public Result ExpireRetention(DateTimeOffset now)
+    {
+        if (Status is ConversationStatus.ConsentWithdrawn or ConversationStatus.RetentionExpired)
+            return Result.Failure(Error.Conflict("Conversation.AlreadyAnonymized", "This conversation's data has already been anonymized."));
+
+        AnonymizeIdentityAndContent();
+        Status = ConversationStatus.RetentionExpired;
+        // Preserve the true completion date for a conversation that already finished —
+        // only a still-open (abandoned, never-completed) conversation gets CompletedAt
+        // set here.
+        CompletedAt ??= now;
+        Raise(new DataRetentionExpiredEvent(Id));
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Unlike VideoInterview's Case (which keeps Scorings/Reports as non-identifying
+    /// aggregate statistics), there's nothing here worth preserving separately from the
+    /// candidate's identity: a captured variable (salary expectation, location) or a
+    /// logged response IS the personal data, not a derived score. So every log's
+    /// response and every variable's value is cleared, alongside the identity link —
+    /// StepId/LoggedAt/Key/CapturedAt survive, giving the transcript's shape without its
+    /// content.
+    /// </summary>
+    private void AnonymizeIdentityAndContent()
+    {
+        foreach (var log in _logs)
+            log.ClearResponse();
+
+        foreach (var variable in _variables)
+            variable.ClearValue();
+
+        CandidateId = Guid.Empty;
+    }
+
     public Result MoveToStep(Guid flowId, Guid stepId)
     {
         if (!IsOpen)

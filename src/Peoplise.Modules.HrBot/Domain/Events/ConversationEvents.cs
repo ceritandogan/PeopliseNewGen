@@ -12,3 +12,7 @@ public sealed record CandidateScreenedOutEvent(ConversationId ConversationId, st
 
 public sealed record UnmatchedQuestionLoggedEvent(ConversationId ConversationId, BotProjectId BotProjectId, string QuestionText)
     : IDomainEvent;
+
+public sealed record ConsentWithdrawnEvent(ConversationId ConversationId, string Reason) : IDomainEvent;
+
+public sealed record DataRetentionExpiredEvent(ConversationId ConversationId) : IDomainEvent;
