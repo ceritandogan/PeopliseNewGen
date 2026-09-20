@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Peoplise.SharedKernel.Domain;
 
 namespace Peoplise.SharedKernel.Persistence;
@@ -14,6 +15,19 @@ public interface IRepository<TAggregateRoot, in TId>
     where TId : notnull
 {
     Task<TAggregateRoot?> GetByIdAsync(TId id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Finds every aggregate matching <paramref name="predicate"/> — for batch/system
+    /// queries (a scheduled sweep, an admin report) that can't be expressed as a single
+    /// by-id lookup. <paramref name="ignoreQueryFilters"/> bypasses the tenant and
+    /// soft-delete global query filters when set, for the rare caller (a background job,
+    /// not a tenant's own request) that deliberately needs to see across every tenant;
+    /// see <c>TenantAwareDbContext</c>'s own tests for why that escape hatch exists.
+    /// </summary>
+    Task<IReadOnlyList<TAggregateRoot>> ListAsync(
+        Expression<Func<TAggregateRoot, bool>> predicate,
+        bool ignoreQueryFilters = false,
+        CancellationToken cancellationToken = default);
 
     Task AddAsync(TAggregateRoot aggregate, CancellationToken cancellationToken = default);
 

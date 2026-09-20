@@ -16,6 +16,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IVideoTranscriptionQueue, VideoTranscriptionQueue>();
         services.AddHostedService<VideoTranscriptionBackgroundService>();
+        services.AddHostedService<RetentionExpiryBackgroundService>();
 
         return services;
     }

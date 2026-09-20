@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Peoplise.SharedKernel.Domain;
 using Peoplise.SharedKernel.Persistence;
@@ -24,6 +25,18 @@ public sealed class GenericRepository<TAggregateRoot, TId> : IRepository<TAggreg
     public Task<TAggregateRoot?> GetByIdAsync(TId id, CancellationToken cancellationToken = default) =>
         _context.Set<TAggregateRoot>()
             .SingleOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
+
+    public async Task<IReadOnlyList<TAggregateRoot>> ListAsync(
+        Expression<Func<TAggregateRoot, bool>> predicate,
+        bool ignoreQueryFilters = false,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Set<TAggregateRoot>().AsQueryable();
+        if (ignoreQueryFilters)
+            query = query.IgnoreQueryFilters();
+
+        return await query.Where(predicate).ToListAsync(cancellationToken);
+    }
 
     public async Task AddAsync(TAggregateRoot aggregate, CancellationToken cancellationToken = default) =>
         await _context.Set<TAggregateRoot>().AddAsync(aggregate, cancellationToken);

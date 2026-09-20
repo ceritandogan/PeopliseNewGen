@@ -212,14 +212,23 @@ public sealed class Case : AggregateRoot<CaseId>, IHasTenant, IAuditableEntity
         return Result.Success();
     }
 
+    /// <summary>
+    /// Unlike <see cref="WithdrawConsent"/>, this is expected to run on an already
+    /// <see cref="CaseStatus.Completed"/>/<see cref="CaseStatus.TimedOut"/> case — that's
+    /// the common case a retention sweep targets, data that simply aged out after the
+    /// interview finished — so it only rejects a case whose data is already anonymized,
+    /// not every non-open one.
+    /// </summary>
     public Result ExpireRetention(DateTimeOffset now)
     {
-        if (!IsOpen)
-            return Result.Failure(Error.Conflict("Case.AlreadyClosed", "This case has already ended."));
+        if (Status is CaseStatus.ConsentWithdrawn or CaseStatus.RetentionExpired)
+            return Result.Failure(Error.Conflict("Case.AlreadyAnonymized", "This case's data has already been anonymized."));
 
         AnonymizeMediaAndIdentity();
         Status = CaseStatus.RetentionExpired;
-        CompletedAt = now;
+        // Preserve the true completion date for a case that already finished — only a
+        // still-open (abandoned, never-completed) case gets CompletedAt set here.
+        CompletedAt ??= now;
         Raise(new DataRetentionExpiredEvent(Id));
         return Result.Success();
     }

@@ -75,4 +75,66 @@ public class CaseConsentWithdrawalTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Case.AlreadyClosed");
     }
+
+    [Fact]
+    public void ExpireRetention_runs_on_an_already_completed_case()
+    {
+        var @case = Case.Start(CaseBotProjectId.New(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow);
+        @case.RecordVideoAnswer(Guid.NewGuid(), "local-storage://video.mp4", retakesAllowed: 0, DateTimeOffset.UtcNow);
+        @case.Complete(DateTimeOffset.UtcNow);
+
+        var result = @case.ExpireRetention(DateTimeOffset.UtcNow);
+
+        result.IsSuccess.Should().BeTrue("a retention sweep's main target is data that aged out after the interview finished");
+        @case.Status.Should().Be(CaseStatus.RetentionExpired);
+        @case.CandidateId.Should().Be(Guid.Empty);
+        @case.StepConversations.Should().OnlyContain(c => c.VideoUrl == null);
+    }
+
+    [Fact]
+    public void ExpireRetention_preserves_the_original_completion_date_of_an_already_completed_case()
+    {
+        var @case = Case.Start(CaseBotProjectId.New(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow);
+        var completedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        @case.Complete(completedAt);
+
+        @case.ExpireRetention(completedAt.AddDays(30));
+
+        @case.CompletedAt.Should().Be(completedAt, "reports/statistics rely on the true completion date surviving anonymization");
+    }
+
+    [Fact]
+    public void ExpireRetention_sets_CompletedAt_for_a_case_that_was_never_completed()
+    {
+        var @case = Case.Start(CaseBotProjectId.New(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow);
+        var expiredAt = DateTimeOffset.UtcNow;
+
+        @case.ExpireRetention(expiredAt);
+
+        @case.CompletedAt.Should().Be(expiredAt);
+    }
+
+    [Fact]
+    public void ExpireRetention_cannot_run_twice()
+    {
+        var @case = Case.Start(CaseBotProjectId.New(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow);
+        @case.ExpireRetention(DateTimeOffset.UtcNow);
+
+        var result = @case.ExpireRetention(DateTimeOffset.UtcNow);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Case.AlreadyAnonymized");
+    }
+
+    [Fact]
+    public void ExpireRetention_cannot_run_on_a_case_that_already_withdrew_consent()
+    {
+        var @case = Case.Start(CaseBotProjectId.New(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow);
+        @case.WithdrawConsent("Candidate requested deletion.", DateTimeOffset.UtcNow);
+
+        var result = @case.ExpireRetention(DateTimeOffset.UtcNow);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Case.AlreadyAnonymized");
+    }
 }

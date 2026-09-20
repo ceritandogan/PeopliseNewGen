@@ -55,4 +55,20 @@ public sealed class CasesController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult(this);
     }
+
+    /// <summary>
+    /// KVKK: an HR/panel user acting on a candidate's consent-withdrawal request
+    /// (received some other way — email, a form). Authenticated like the rest of this
+    /// controller's non-candidate-facing routes; the candidate app has no auth of its
+    /// own yet to call this directly.
+    /// </summary>
+    [HttpPost("{caseId:guid}/withdraw-consent")]
+    public async Task<IActionResult> WithdrawConsent(Guid caseId, WithdrawCaseConsentRequest request, CancellationToken cancellationToken)
+    {
+        var command = new RequestDataDeletionCommand(caseId, DataDeletionReason.ConsentWithdrawn, request.Reason);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
+
+public sealed record WithdrawCaseConsentRequest(string? Reason);
