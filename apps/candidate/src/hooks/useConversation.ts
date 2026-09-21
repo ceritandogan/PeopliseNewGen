@@ -7,8 +7,9 @@ export function useStartConversation() {
   });
 }
 
-export function useSendConversationResponse(conversationId: string) {
+export function useSendConversationResponse(conversationId: string, candidateToken: string) {
   return useMutation({
-    mutationFn: (response: string | null) => conversationsApi.sendConversationResponse(conversationId, response),
+    mutationFn: (response: string | null) =>
+      conversationsApi.sendConversationResponse(conversationId, response, candidateToken),
   });
 }

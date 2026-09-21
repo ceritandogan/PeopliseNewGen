@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { Button, useToast } from "@peoplise/ui";
 import { toApiError } from "@peoplise/api-client";
 import { useCameraPreview } from "../hooks/useCameraPreview";
@@ -20,6 +20,7 @@ export function VideoInterviewPage() {
   const { show } = useToast();
   const { positionId } = useParams<{ positionId: string }>();
   const [candidateId] = useState(() => crypto.randomUUID());
+  const [, setSearchParams] = useSearchParams();
 
   const { videoRef, streamRef, status, errorMessage } = useCameraPreview();
   const mediaRecorder = useMediaRecorder(streamRef);
@@ -36,11 +37,24 @@ export function VideoInterviewPage() {
     if (hasStarted.current || !positionId) return;
     hasStarted.current = true;
 
-    startCase.mutate({ positionId, candidateId }, { onError: (error) => show(toApiError(error).title, "error") });
-  }, [positionId, candidateId, startCase, show]);
+    // Always starts fresh on load, unlike BotChatPage — the in-progress camera/recording
+    // state (phase, media stream, recorded blob) can't be resumed from a URL either way,
+    // so there's nothing to gain from checking for an existing caseId+token here. The
+    // token still goes in the URL below, for consistency with ADR 0004 and so a
+    // freshly-started case's link is shareable/reloadable the same way a conversation's is.
+    startCase.mutate(
+      { positionId, candidateId },
+      {
+        onSuccess: (result) =>
+          setSearchParams({ caseId: result.case.caseId, token: result.candidateToken }, { replace: true }),
+        onError: (error) => show(toApiError(error).title, "error"),
+      },
+    );
+  }, [positionId, candidateId, startCase, show, setSearchParams]);
 
-  const caseResult = startCase.data;
-  const submitAnswer = useSubmitVideoAnswer(caseResult?.caseId ?? "");
+  const caseResult = startCase.data?.case;
+  const candidateToken = startCase.data?.candidateToken ?? "";
+  const submitAnswer = useSubmitVideoAnswer(caseResult?.caseId ?? "", candidateToken);
 
   useEffect(() => {
     if (phase !== "preparing" && phase !== "recording") return;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useParams } from "react-router";
+import { useLocation, useParams, useSearchParams } from "react-router";
 import { Button, Input, useToast } from "@peoplise/ui";
 import { conversationsApi, toApiError, type ConversationStepContent } from "@peoplise/api-client";
 import { ChatBubble, type ChatMessage } from "../components/ChatBubble";
@@ -21,32 +21,59 @@ export function BotChatPage() {
   const { positionId } = useParams<{ positionId: string }>();
   const { state } = useLocation();
   const candidateId = (state as { candidateId?: string } | null)?.candidateId;
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [conversationId, setConversationId] = useState<string>();
+  const [candidateToken, setCandidateToken] = useState<string>();
   const [isEnded, setIsEnded] = useState(false);
 
   const startConversation = useStartConversation();
-  const sendResponse = useSendConversationResponse(conversationId ?? "");
+  const sendResponse = useSendConversationResponse(conversationId ?? "", candidateToken ?? "");
   const hasStarted = useRef(false);
 
   useEffect(() => {
-    if (hasStarted.current || !positionId || !candidateId) return;
+    if (hasStarted.current || !positionId) return;
     hasStarted.current = true;
+
+    // A conversationId+token already in the URL means this page load *is* the
+    // "candidate returns via their link" case (see ADR 0004) — the token proves who
+    // they are, so nothing needs starting again. Rehydrating the visible transcript
+    // from history is a separate, not-yet-built feature (ADR 0004's Consequences); the
+    // candidate can still continue the conversation from here, they just won't see
+    // their prior messages replayed.
+    const existingConversationId = searchParams.get("conversationId");
+    const existingToken = searchParams.get("token");
+    if (existingConversationId && existingToken) {
+      setConversationId(existingConversationId);
+      setCandidateToken(existingToken);
+      return;
+    }
+
+    if (!candidateId) return;
 
     startConversation.mutate(
       { positionId, candidateId, interface: "WebChat" },
       {
         onSuccess: (result) => {
-          setConversationId(result.conversationId);
-          setMessages([toChatMessage(result.currentStep)]);
-          if (result.currentStep.isFinalStep) setIsEnded(true);
+          setConversationId(result.conversation.conversationId);
+          setCandidateToken(result.candidateToken);
+          setMessages([toChatMessage(result.conversation.currentStep)]);
+          if (result.conversation.currentStep.isFinalStep) setIsEnded(true);
+
+          // Puts the token in the URL, per ADR 0004 — this page is now a link that
+          // works if reopened (the token still proves who it belongs to), not just a
+          // one-time in-session state.
+          setSearchParams(
+            { conversationId: result.conversation.conversationId, token: result.candidateToken },
+            { replace: true },
+          );
         },
         onError: (error) => show(toApiError(error).title, "error"),
       },
     );
-  }, [positionId, candidateId, startConversation, show]);
+  }, [positionId, candidateId, startConversation, show, searchParams, setSearchParams]);
 
   const respond = async (response: string | null) => {
     try {
@@ -57,7 +84,7 @@ export function BotChatPage() {
       }
 
       setMessages((prev) => [...prev, toChatMessage(result.currentStep!)]);
-      if (result.currentStep.isFinalStep && conversationId) {
+      if (result.currentStep.isFinalStep && conversationId && candidateToken) {
         setIsEnded(true);
         // The engine only closes a conversation once a *next* response is processed for
         // a final step (see ConversationProcessor's remarks) — this one carries no
@@ -66,7 +93,7 @@ export function BotChatPage() {
         // there's no pending/error UI tied to it, and TanStack Query's mutation
         // observer doesn't handle two mutateAsync calls in quick succession on the same
         // hook instance cleanly.
-        await conversationsApi.sendConversationResponse(conversationId, null);
+        await conversationsApi.sendConversationResponse(conversationId, null, candidateToken);
       }
     } catch (error) {
       show(toApiError(error).title, "error");
@@ -85,7 +112,9 @@ export function BotChatPage() {
     setDraft("");
   };
 
-  if (!positionId || !candidateId) {
+  // Missing everything needed to proceed: no position, and neither a fresh candidateId
+  // (from Apply) nor a conversationId+token already in the URL (a returning candidate).
+  if (!positionId || (!candidateId && !conversationId)) {
     return <p className="mx-auto mt-8 max-w-lg text-sm text-slate-500">{t("apply.missingPosition")}</p>;
   }
 

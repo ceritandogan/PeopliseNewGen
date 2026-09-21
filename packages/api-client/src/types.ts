@@ -151,6 +151,12 @@ export interface StartConversationResult {
   currentStep: ConversationStepContent;
 }
 
+/** See ADR 0004: candidateToken must be presented (as the X-Candidate-Token header) on every later request for this conversation. */
+export interface StartConversationResponse {
+  conversation: StartConversationResult;
+  candidateToken: string;
+}
+
 export interface ProcessUserResponseResult {
   status: ConversationStatus;
   /** Null once the conversation has ended — there's no further step to render. */
@@ -208,6 +214,12 @@ export interface StartCandidateCaseResult {
   content: string;
   preparationTimeSeconds: number | null;
   recordingTimeSeconds: number | null;
+}
+
+/** See ADR 0004: candidateToken must be presented (as the X-Candidate-Token header) on every later request for this case. */
+export interface StartCandidateCaseResponse {
+  case: StartCandidateCaseResult;
+  candidateToken: string;
 }
 
 export interface CodeReviewResult {

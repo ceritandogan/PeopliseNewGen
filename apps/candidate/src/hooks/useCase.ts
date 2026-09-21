@@ -7,9 +7,9 @@ export function useStartCandidateCase() {
   });
 }
 
-export function useSubmitVideoAnswer(caseId: string) {
+export function useSubmitVideoAnswer(caseId: string, candidateToken: string) {
   return useMutation({
     mutationFn: ({ stepId, file }: { stepId: string; file: File }) =>
-      casesApi.submitVideoAnswer(caseId, stepId, file),
+      casesApi.submitVideoAnswer(caseId, stepId, file, candidateToken),
   });
 }

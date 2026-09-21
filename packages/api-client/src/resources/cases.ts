@@ -4,18 +4,23 @@ import type {
   CaseReport,
   CodeReviewResult,
   StartCandidateCaseRequest,
-  StartCandidateCaseResult,
+  StartCandidateCaseResponse,
 } from "../types";
 
-export async function startCandidateCase(request: StartCandidateCaseRequest): Promise<StartCandidateCaseResult> {
-  const { data } = await httpClient.post<StartCandidateCaseResult>("/api/cases", request);
+export async function startCandidateCase(request: StartCandidateCaseRequest): Promise<StartCandidateCaseResponse> {
+  const { data } = await httpClient.post<StartCandidateCaseResponse>("/api/cases", request);
   return data;
 }
 
+/**
+ * candidateToken is the value returned from startCandidateCase — see ADR 0004. Sent as
+ * X-Candidate-Token, proving this caller is the one this case was started for.
+ */
 export async function submitVideoAnswer(
   caseId: string,
   stepId: string,
   file: File,
+  candidateToken: string,
   onUploadProgress?: (percent: number) => void,
 ): Promise<void> {
   const form = new FormData();
@@ -23,7 +28,7 @@ export async function submitVideoAnswer(
   form.append("video", file);
 
   await httpClient.post(`/api/cases/${caseId}/video-answers`, form, {
-    headers: { "Content-Type": "multipart/form-data" },
+    headers: { "Content-Type": "multipart/form-data", "X-Candidate-Token": candidateToken },
     onUploadProgress: onUploadProgress
       ? (event) => onUploadProgress(event.total ? Math.round((event.loaded / event.total) * 100) : 0)
       : undefined,

@@ -17,6 +17,7 @@ using Peoplise.Infrastructure.Media;
 using Peoplise.Infrastructure.Modules;
 using Peoplise.Infrastructure.Persistence;
 using Peoplise.Infrastructure.Persistence.Interceptors;
+using Peoplise.Infrastructure.Security;
 using Peoplise.Infrastructure.Validation;
 using Peoplise.SharedKernel.AI;
 using Peoplise.SharedKernel.Auditing;
@@ -64,6 +65,7 @@ public static class DependencyInjection
         services.AddPersistence(configuration);
         services.AddDomainEvents(registry);
         services.AddAuth(configuration, useDevelopmentAuthDefaults);
+        services.AddSingleton<ICandidateResourceTokenService, HmacCandidateResourceTokenService>();
         services.AddMediaAndAI();
 
         return services;
