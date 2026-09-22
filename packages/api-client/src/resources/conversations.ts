@@ -1,5 +1,6 @@
 import { httpClient } from "../http";
 import type {
+  ConversationForCandidateResponse,
   ConversationHistory,
   ProcessUserResponseResult,
   StartConversationRequest,
@@ -30,5 +31,16 @@ export async function sendConversationResponse(
 
 export async function getConversationHistory(conversationId: string): Promise<ConversationHistory> {
   const { data } = await httpClient.get<ConversationHistory>(`/api/conversations/${conversationId}/history`);
+  return data;
+}
+
+/** HR/panel-only lookup — finds the conversation (if any) a candidate has for one position, given what CandidateDetailPage already has. */
+export async function getConversationForCandidate(
+  candidateId: string,
+  positionId: string,
+): Promise<ConversationForCandidateResponse> {
+  const { data } = await httpClient.get<ConversationForCandidateResponse>("/api/conversations/by-candidate", {
+    params: { candidateId, positionId },
+  });
   return data;
 }

@@ -78,7 +78,10 @@
     "addNote": "Add a note",
     "privateNote": "Private note",
     "videoAnswer": "Video answer",
-    "resume": "Resume"
+    "resume": "Resume",
+    "conversation": "HR bot conversation",
+    "noConversation": "Candidate hasn't started the HR chat yet",
+    "capturedAnswers": "Captured answers"
   },
   "bot": {
     "typeYourAnswer": "Type your answer…",

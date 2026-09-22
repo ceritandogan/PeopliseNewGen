@@ -17,7 +17,7 @@ public sealed record ConversationHistory(
     IReadOnlyList<ConversationLogEntry> Logs,
     IReadOnlyList<ConversationVariableEntry> Variables);
 
-public sealed record ConversationLogEntry(Guid StepId, string? CandidateResponse, DateTimeOffset LoggedAt);
+public sealed record ConversationLogEntry(Guid StepId, string? BotMessage, string? CandidateResponse, DateTimeOffset LoggedAt);
 
 public sealed record ConversationVariableEntry(string Key, string Value);
 
@@ -43,12 +43,26 @@ public sealed class GetConversationHistoryQueryHandler : IRequestHandler<GetConv
         if (conversation is null)
             return Result.Failure<ConversationHistory>(Error.NotFound("Conversation.NotFound", $"No conversation '{request.ConversationId}' was found."));
 
+        var botProject = await _context.Set<BotProject>()
+            .SingleOrDefaultAsync(p => p.Id == conversation.BotProjectId, cancellationToken);
+
+        // A log's step may live in any flow the conversation passed through (a
+        // SwitchFlow step moves a conversation between flows), not just whichever flow
+        // it's currently sitting on — search every flow, not just CurrentFlowId.
+        var stepContentById = botProject?.Flows
+            .SelectMany(f => f.Steps)
+            .ToDictionary(s => s.Id, s => s.Content) ?? [];
+
         var history = new ConversationHistory(
             conversation.Id.Value,
             conversation.Status,
             conversation.StartedAt,
             conversation.CompletedAt,
-            conversation.Logs.OrderBy(l => l.LoggedAt).Select(l => new ConversationLogEntry(l.StepId, l.CandidateResponse, l.LoggedAt)).ToList(),
+            conversation.Logs
+                .OrderBy(l => l.LoggedAt)
+                .Select(l => new ConversationLogEntry(
+                    l.StepId, stepContentById.GetValueOrDefault(l.StepId), l.CandidateResponse, l.LoggedAt))
+                .ToList(),
             conversation.Variables.Select(v => new ConversationVariableEntry(v.Key, v.Value)).ToList());
 
         return Result.Success(history);

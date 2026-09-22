@@ -11,6 +11,7 @@ public sealed record GetCandidateDetailQuery(Guid CandidateProcessId) : IRequest
 
 public sealed record CandidateDetail(
     Guid CandidateProcessId,
+    Guid CandidateId,
     Guid PositionId,
     string CandidateName,
     string CandidateEmail,
@@ -49,6 +50,7 @@ public sealed class GetCandidateDetailQueryHandler : IRequestHandler<GetCandidat
 
         var detail = new CandidateDetail(
             process.Id.Value,
+            process.CandidateId.Value,
             process.PositionId.Value,
             process.CandidateName,
             process.CandidateEmail,

@@ -78,7 +78,10 @@
     "addNote": "Not ekle",
     "privateNote": "Gizli not",
     "videoAnswer": "Video yanıt",
-    "resume": "Özgeçmiş"
+    "resume": "Özgeçmiş",
+    "conversation": "İK botu sohbeti",
+    "noConversation": "Aday henüz İK sohbetine başlamadı",
+    "capturedAnswers": "Alınan yanıtlar"
   },
   "bot": {
     "typeYourAnswer": "Yanıtınızı yazın…",

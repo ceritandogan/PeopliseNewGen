@@ -77,6 +77,22 @@ public sealed class ConversationsController : ControllerBase
     }
 
     /// <summary>
+    /// HR/panel-only lookup: given a candidate + position (what CandidateDetailPage
+    /// already has), finds the matching conversation, if the candidate has started one.
+    /// `conversationId: null` is a normal, successful "hasn't started chatting yet"
+    /// answer, not a 404 — see GetConversationForCandidateQuery's remarks.
+    /// </summary>
+    [HttpGet("by-candidate")]
+    public async Task<IActionResult> GetForCandidate([FromQuery] Guid candidateId, [FromQuery] Guid positionId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetConversationForCandidateQuery(candidateId, positionId), cancellationToken);
+        if (result.IsFailure)
+            return result.ToActionResult(this);
+
+        return Ok(new ConversationForCandidateResponse(result.Value));
+    }
+
+    /// <summary>
     /// KVKK: an HR/panel user acting on a candidate's consent-withdrawal request,
     /// mirroring <see cref="CasesController"/>'s withdraw-consent endpoint (see
     /// docs/adr/0001 and 0003). Authenticated like the rest of this controller's
@@ -98,3 +114,5 @@ public sealed record WithdrawConversationConsentRequest(string? Reason);
 
 /// <summary>Wraps StartConversationResult with the candidate access token — see ADR 0004. Every later request for this conversation must present this token in the X-Candidate-Token header.</summary>
 public sealed record StartConversationResponse(StartConversationResult Conversation, string CandidateToken);
+
+public sealed record ConversationForCandidateResponse(Guid? ConversationId);

@@ -97,6 +97,8 @@ export interface CandidateEvaluationDetail {
 
 export interface CandidateDetail {
   candidateProcessId: string;
+  /** The raw candidate id — matches Conversation.candidateId in HrBot, used to look up a candidate's chat via getConversationForCandidate. */
+  candidateId: string;
   positionId: string;
   candidateName: string;
   candidateEmail: string;
@@ -167,6 +169,8 @@ export interface ProcessUserResponseResult {
 
 export interface ConversationLogEntry {
   stepId: string;
+  /** The bot's question at this step, resolved from the project's flow — null if that step no longer exists (e.g. the flow was edited after this conversation happened). */
+  botMessage: string | null;
   candidateResponse: string | null;
   loggedAt: string;
 }
@@ -183,6 +187,11 @@ export interface ConversationHistory {
   completedAt: string | null;
   logs: ConversationLogEntry[];
   variables: ConversationVariableEntry[];
+}
+
+/** null means the candidate hasn't started an HR chat for this position yet — not an error. */
+export interface ConversationForCandidateResponse {
+  conversationId: string | null;
 }
 
 // ---- Video Interview --------------------------------------------------------
