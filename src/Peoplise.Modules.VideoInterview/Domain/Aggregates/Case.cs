@@ -144,6 +144,14 @@ public sealed class Case : AggregateRoot<CaseId>, IHasTenant, IAuditableEntity
         string reviewerId, Guid stepId, Guid competencyId, int score, DateTimeOffset scoredAt,
         decimal weight = 1m, string? notes = null, bool isAiGenerated = false)
     {
+        // Unlike RecordTextResponse/RecordVideoAnswer, scoring is expected to happen on
+        // an InProgress case (as steps complete) or a Completed one (a reviewer scoring
+        // after the fact) — only the two anonymized-data states are rejected, since
+        // adding new scoring against a case whose identity/media has already been
+        // severed (Stage 10/12's KVKK sweep) would defeat the point of anonymizing it.
+        if (Status is CaseStatus.ConsentWithdrawn or CaseStatus.RetentionExpired)
+            return Result.Failure(Error.Conflict("Case.DataAnonymized", "This case's data has already been anonymized; it can no longer be scored."));
+
         if (_scorings.Any(s => s.ReviewerId == reviewerId && s.StepId == stepId && s.CompetencyId == competencyId))
         {
             return Result.Failure(Error.Conflict(

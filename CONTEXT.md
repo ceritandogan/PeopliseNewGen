@@ -14,3 +14,7 @@ _Avoid_: Using "applicants" to mean "active candidates" without saying so.
 
 **CandidateProcess**:
 One candidate's run through one `Position`'s pipeline, tracked via `PipelineStatus` (`NewApplication` → `UnderReview` → `Testing` → `Interviewing` → `Offer` → `Accepted`, or diverted to `Rejected`/`Eliminated`/`TimedOut`).
+
+**Reviewer**:
+Not a separate domain entity — a `Reviewer` is simply an authenticated panel `User` in the act of scoring a `Case`. `CaseScoring.ReviewerId` is that user's stable id (the JWT `sub` claim), not a role, a job title, or a client-supplied label. There's no "who is allowed to review" concept yet — any authenticated panel user can submit a score (see the app's broader lack of role administration).
+_Avoid_: Treating "Reviewer" as a role/permission concept — it isn't one until a deliberate future decision introduces role-gating.

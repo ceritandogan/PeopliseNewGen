@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using Peoplise.Modules.ATS.Application.Positions.Queries;
 using Peoplise.Modules.VideoInterview.Application.Cases.Commands;
 using Peoplise.Modules.VideoInterview.Application.Cases.Queries;
 using Peoplise.SharedKernel.MultiTenancy;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Peoplise.Api.Controllers;
 
@@ -98,9 +100,30 @@ public sealed class CasesController : ControllerBase
         var result = await _mediator.Send(new GetCaseReportQuery(caseId), cancellationToken);
         return result.ToActionResult(this);
     }
+
+    /// <summary>
+    /// The reviewer is whoever the access token's <c>sub</c> claim says is making the
+    /// call — never taken from the request body — so a score can't be submitted under
+    /// someone else's name. No role check: same "no role administration exists yet"
+    /// reasoning as the rest of this controller.
+    /// </summary>
+    [HttpPost("{caseId:guid}/scorings")]
+    public async Task<IActionResult> SubmitScoring(Guid caseId, SubmitScoringRequest request, CancellationToken cancellationToken)
+    {
+        var reviewerId = User.FindFirstValue(Claims.Subject);
+        if (string.IsNullOrEmpty(reviewerId))
+            return Unauthorized();
+
+        var command = new SubmitReviewerScoringCommand(caseId, reviewerId, request.StepId, request.CompetencyId, request.Score, request.Notes);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
 
 public sealed record WithdrawCaseConsentRequest(string? Reason);
+
+/// <summary>No ReviewerId here — deliberately: it's derived server-side from the caller's access token, never accepted from the client. See CasesController.SubmitScoring.</summary>
+public sealed record SubmitScoringRequest(Guid StepId, Guid CompetencyId, int Score, string? Notes);
 
 /// <summary>Wraps StartCandidateCaseResult with the candidate access token — see ADR 0004. Every later request for this case must present this token in the X-Candidate-Token header.</summary>
 public sealed record StartCandidateCaseResponse(StartCandidateCaseResult Case, string CandidateToken);
