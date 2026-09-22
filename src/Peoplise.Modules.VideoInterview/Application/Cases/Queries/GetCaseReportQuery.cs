@@ -15,48 +15,41 @@ public sealed record CaseReportDto(Guid CaseId, DateTimeOffset GeneratedAt, IRea
 public sealed record ReportSectionDto(string Title, string Content);
 
 /// <summary>
-/// Read-through: returns the case's most recent generated report, generating (and
-/// persisting) one on the project's template if none exists yet. A pragmatic relaxation
-/// of strict query/command separation — report generation is cheap, deterministic, and
-/// has no meaningful "who asked for this" semantics worth a separate command for.
+/// Recomputes the report fresh on every call against the case's current state — never
+/// reuses or persists a previous <see cref="Domain.Entities.Report"/>. See ADR 0005:
+/// generation is cheap/deterministic, and a cached report can silently go stale relative
+/// to scoring that happens after it was first viewed.
 /// </summary>
 public sealed class GetCaseReportQueryHandler : IRequestHandler<GetCaseReportQuery, Result<CaseReportDto>>
 {
     private readonly AppDbContext _context;
     private readonly IRepository<CaseBotProject, CaseBotProjectId> _projects;
-    private readonly IUnitOfWork _unitOfWork;
 
-    public GetCaseReportQueryHandler(
-        AppDbContext context,
-        IRepository<CaseBotProject, CaseBotProjectId> projects,
-        IUnitOfWork unitOfWork)
+    public GetCaseReportQueryHandler(AppDbContext context, IRepository<CaseBotProject, CaseBotProjectId> projects)
     {
         _context = context;
         _projects = projects;
-        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CaseReportDto>> Handle(GetCaseReportQuery request, CancellationToken cancellationToken)
     {
         var caseId = CaseId.From(request.CaseId);
 
-        var @case = await _context.Set<Case>()
-            .Include(c => c.Reports)
-            .SingleOrDefaultAsync(c => c.Id == caseId, cancellationToken);
-
+        var @case = await _context.Set<Case>().SingleOrDefaultAsync(c => c.Id == caseId, cancellationToken);
         if (@case is null)
             return Result.Failure<CaseReportDto>(Error.NotFound("Case.NotFound", $"No case '{request.CaseId}' was found."));
 
-        var existingReport = @case.Reports.OrderByDescending(r => r.GeneratedAt).FirstOrDefault();
-        if (existingReport is not null)
-            return Result.Success(ToDto(request.CaseId, existingReport.GeneratedAt, existingReport.Sections));
+        if (@case.Status != CaseStatus.Completed)
+        {
+            return Result.Failure<CaseReportDto>(Error.Conflict(
+                "Case.NotCompleted", "A report is only available once this case has completed."));
+        }
 
         var project = await _projects.GetByIdAsync(@case.CaseBotProjectId, cancellationToken);
         if (project is null)
             return Result.Failure<CaseReportDto>(Error.NotFound("CaseBotProject.NotFound", "The case's project could not be found."));
 
         var report = @case.GenerateReport(project.ReportTemplate, DateTimeOffset.UtcNow);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(ToDto(request.CaseId, report.GeneratedAt, report.Sections));
     }

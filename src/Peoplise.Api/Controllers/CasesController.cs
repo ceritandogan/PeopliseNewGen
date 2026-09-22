@@ -86,6 +86,18 @@ public sealed class CasesController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult(this);
     }
+
+    /// <summary>
+    /// Panel-facing. No role check — this app has no role administration yet (a single
+    /// hardcoded seed user), so gating on a role here would gate nothing real; see ADR
+    /// 0005's neighboring design notes. Recomputed on every call, never cached.
+    /// </summary>
+    [HttpGet("{caseId:guid}/report")]
+    public async Task<IActionResult> GetReport(Guid caseId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetCaseReportQuery(caseId), cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
 
 public sealed record WithdrawCaseConsentRequest(string? Reason);

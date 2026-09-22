@@ -52,6 +52,12 @@ public sealed class CaseBotProject : AggregateRoot<CaseBotProjectId>, IHasTenant
         RetakesAllowed = retakesAllowed;
         RetentionPeriodDays = retentionPeriodDays;
         ReportTemplate = new ReportTemplate(Guid.NewGuid(), $"{name} — Default Report");
+        // A template with zero sections would make every generated Report permanently
+        // empty (Case.BuildSectionContent only fills content for a section whose title
+        // matches "competenc"/"yetkinlik") — no template-authoring UI/command exists yet,
+        // so seed the one section that's actually wired up rather than ship a report that
+        // can never have content.
+        ReportTemplate.AddSection("Competencies", 0);
     }
 
     public static Result<CaseBotProject> Create(string name, Guid positionId, int retakesAllowed, int retentionPeriodDays)
