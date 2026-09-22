@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Peoplise.Modules.ATS.Application.Positions.Queries;
 using Peoplise.Modules.VideoInterview.Application.CaseBotProjects.Commands;
+using Peoplise.Modules.VideoInterview.Application.CaseBotProjects.Queries;
 using Peoplise.Modules.VideoInterview.Application.Cases.Queries;
 
 namespace Peoplise.Api.Controllers;
@@ -36,6 +37,13 @@ public sealed class CaseBotProjectsController : ControllerBase
             return positionCheck.ToActionResult(this);
 
         var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ListForPosition([FromQuery] Guid positionId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetCaseBotProjectsForPositionQuery(positionId), cancellationToken);
         return result.ToActionResult(this);
     }
 

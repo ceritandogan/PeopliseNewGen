@@ -58,6 +58,16 @@
     "workMode_remote": "Uzaktan",
     "workMode_hybrid": "Hibrit"
   },
+  "positionDetail": {
+    "caseBotProjects": "Video mülakat projeleri",
+    "newCaseBotProject": "Yeni video mülakat projesi",
+    "botProjects": "İK botu projeleri",
+    "newBotProject": "Yeni İK botu projesi",
+    "noProjectsYet": "Henüz proje yok.",
+    "name": "Ad",
+    "retakesAllowed": "İzin verilen tekrar çekim",
+    "retentionPeriodDays": "Saklama süresi (gün)"
+  },
   "pipeline": {
     "title": "Aday Pipeline",
     "newApplication": "Yeni Başvuru",

@@ -257,3 +257,29 @@ export interface CandidateComparisonItem {
   overallScore: number;
   competencyScores: Record<string, number>;
 }
+
+export interface CaseBotProjectSummary {
+  id: string;
+  name: string;
+  retakesAllowed: number;
+  retentionPeriodDays: number;
+}
+
+export interface CreateCaseBotProjectRequest {
+  name: string;
+  positionId: string;
+  retakesAllowed: number;
+  retentionPeriodDays: number;
+}
+
+export interface BotProjectSummary {
+  id: string;
+  name: string;
+  retentionPeriodDays: number;
+}
+
+export interface CreateBotProjectRequest {
+  name: string;
+  positionId: string;
+  retentionPeriodDays: number;
+}

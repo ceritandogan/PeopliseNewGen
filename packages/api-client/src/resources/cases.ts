@@ -1,8 +1,10 @@
 import { httpClient } from "../http";
 import type {
   CandidateComparisonItem,
+  CaseBotProjectSummary,
   CaseReport,
   CodeReviewResult,
+  CreateCaseBotProjectRequest,
   StartCandidateCaseRequest,
   StartCandidateCaseResponse,
 } from "../types";
@@ -59,5 +61,15 @@ export async function getCandidateComparison(caseBotProjectId: string): Promise<
   const { data } = await httpClient.get<CandidateComparisonItem[]>(
     `/api/case-bot-projects/${caseBotProjectId}/comparison`,
   );
+  return data;
+}
+
+export async function createCaseBotProject(request: CreateCaseBotProjectRequest): Promise<string> {
+  const { data } = await httpClient.post<string>("/api/case-bot-projects", request);
+  return data;
+}
+
+export async function getCaseBotProjectsForPosition(positionId: string): Promise<CaseBotProjectSummary[]> {
+  const { data } = await httpClient.get<CaseBotProjectSummary[]>("/api/case-bot-projects", { params: { positionId } });
   return data;
 }

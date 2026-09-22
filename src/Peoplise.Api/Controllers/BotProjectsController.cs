@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Peoplise.Modules.ATS.Application.Positions.Queries;
 using Peoplise.Modules.HrBot.Application.BotProjects.Commands;
+using Peoplise.Modules.HrBot.Application.BotProjects.Queries;
 
 namespace Peoplise.Api.Controllers;
 
@@ -35,6 +36,13 @@ public sealed class BotProjectsController : ControllerBase
             return positionCheck.ToActionResult(this);
 
         var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ListForPosition([FromQuery] Guid positionId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetBotProjectsForPositionQuery(positionId), cancellationToken);
         return result.ToActionResult(this);
     }
 }

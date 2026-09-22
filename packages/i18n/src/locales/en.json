@@ -58,6 +58,16 @@
     "workMode_remote": "Remote",
     "workMode_hybrid": "Hybrid"
   },
+  "positionDetail": {
+    "caseBotProjects": "Video interview projects",
+    "newCaseBotProject": "New video interview project",
+    "botProjects": "HR bot projects",
+    "newBotProject": "New HR bot project",
+    "noProjectsYet": "No projects yet.",
+    "name": "Name",
+    "retakesAllowed": "Retakes allowed",
+    "retentionPeriodDays": "Retention period (days)"
+  },
   "pipeline": {
     "title": "Candidate Pipeline",
     "newApplication": "New Application",
