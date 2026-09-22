@@ -91,7 +91,9 @@
     "resume": "Resume",
     "conversation": "HR bot conversation",
     "noConversation": "Candidate hasn't started the HR chat yet",
-    "capturedAnswers": "Captured answers"
+    "capturedAnswers": "Captured answers",
+    "noCase": "Candidate hasn't started the video interview yet",
+    "caseInProgress": "Video interview in progress — no report yet"
   },
   "bot": {
     "typeYourAnswer": "Type your answer…",

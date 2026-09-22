@@ -28,19 +28,19 @@ public sealed class GetConversationForCandidateQueryHandler : IRequestHandler<Ge
     public async Task<Result<Guid?>> Handle(GetConversationForCandidateQuery request, CancellationToken cancellationToken)
     {
         // A position can have more than one BotProject (no uniqueness guard — see the
-        // CaseBotProject/BotProject creation stage's design notes); most-recently-created
-        // wins, same "re-run with a new config supersedes the old one" reasoning as
-        // StartConversationCommand.
-        var botProject = await _context.Set<BotProject>()
+        // CaseBotProject/BotProject creation stage's design notes). Which project should
+        // route a *new* candidate (most-recently-created, see StartConversationCommand)
+        // and where an *existing* candidate's conversation actually lives are different
+        // questions — a candidate who started chatting under an older project must stay
+        // findable even after a newer project is created for the same position, so this
+        // searches every BotProject for the position rather than only the newest.
+        var botProjectIds = await _context.Set<BotProject>()
             .Where(p => p.PositionId == request.PositionId)
-            .OrderByDescending(p => p.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (botProject is null)
-            return Result.Success<Guid?>(null);
+            .Select(p => p.Id)
+            .ToListAsync(cancellationToken);
 
         var conversation = await _context.Set<Conversation>()
-            .Where(c => c.CandidateId == request.CandidateId && c.BotProjectId == botProject.Id)
+            .Where(c => c.CandidateId == request.CandidateId && botProjectIds.Contains(c.BotProjectId))
             .OrderByDescending(c => c.StartedAt)
             .FirstOrDefaultAsync(cancellationToken);
 

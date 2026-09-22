@@ -251,6 +251,11 @@ export interface CaseReport {
   sections: ReportSection[];
 }
 
+/** caseId is null when the candidate hasn't started their video interview yet — not an error. */
+export interface CaseForCandidateResponse {
+  caseId: string | null;
+}
+
 export interface CandidateComparisonItem {
   caseId: string;
   candidateId: string;

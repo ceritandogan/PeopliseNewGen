@@ -91,7 +91,9 @@
     "resume": "Özgeçmiş",
     "conversation": "İK botu sohbeti",
     "noConversation": "Aday henüz İK sohbetine başlamadı",
-    "capturedAnswers": "Alınan yanıtlar"
+    "capturedAnswers": "Alınan yanıtlar",
+    "noCase": "Aday henüz video mülakata başlamadı",
+    "caseInProgress": "Video mülakat devam ediyor — henüz rapor yok"
   },
   "bot": {
     "typeYourAnswer": "Yanıtınızı yazın…",

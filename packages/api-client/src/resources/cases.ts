@@ -2,6 +2,7 @@ import { httpClient } from "../http";
 import type {
   CandidateComparisonItem,
   CaseBotProjectSummary,
+  CaseForCandidateResponse,
   CaseReport,
   CodeReviewResult,
   CreateCaseBotProjectRequest,
@@ -54,6 +55,14 @@ export async function requestAICodeReview(
 
 export async function getCaseReport(caseId: string): Promise<CaseReport> {
   const { data } = await httpClient.get<CaseReport>(`/api/cases/${caseId}/report`);
+  return data;
+}
+
+/** HR/panel-only lookup — finds the case (if any) a candidate has for one position, given what CandidateDetailPage already has. */
+export async function getCaseForCandidate(candidateId: string, positionId: string): Promise<CaseForCandidateResponse> {
+  const { data } = await httpClient.get<CaseForCandidateResponse>("/api/cases/by-candidate", {
+    params: { candidateId, positionId },
+  });
   return data;
 }
 

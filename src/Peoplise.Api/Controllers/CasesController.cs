@@ -118,6 +118,22 @@ public sealed class CasesController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult(this);
     }
+
+    /// <summary>
+    /// HR/panel-only lookup: given a candidate + position (what CandidateDetailPage
+    /// already has), finds the matching case, if the candidate has started one.
+    /// `caseId: null` is a normal, successful "hasn't started their video interview yet"
+    /// answer, not a 404 — see GetCaseForCandidateQuery's remarks.
+    /// </summary>
+    [HttpGet("by-candidate")]
+    public async Task<IActionResult> GetForCandidate([FromQuery] Guid candidateId, [FromQuery] Guid positionId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetCaseForCandidateQuery(candidateId, positionId), cancellationToken);
+        if (result.IsFailure)
+            return result.ToActionResult(this);
+
+        return Ok(new CaseForCandidateResponse(result.Value));
+    }
 }
 
 public sealed record WithdrawCaseConsentRequest(string? Reason);
@@ -127,3 +143,6 @@ public sealed record SubmitScoringRequest(Guid StepId, Guid CompetencyId, int Sc
 
 /// <summary>Wraps StartCandidateCaseResult with the candidate access token — see ADR 0004. Every later request for this case must present this token in the X-Candidate-Token header.</summary>
 public sealed record StartCandidateCaseResponse(StartCandidateCaseResult Case, string CandidateToken);
+
+/// <summary>caseId is null when the candidate hasn't started their video interview yet — not an error.</summary>
+public sealed record CaseForCandidateResponse(Guid? CaseId);

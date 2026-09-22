@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, Badge, Button, Input, useAuth, useToast } from "@peoplise/ui";
 import { toApiError } from "@peoplise/api-client";
+import { CaseReportCard } from "../components/CaseReportCard";
 import { ConversationTranscriptCard } from "../components/ConversationTranscriptCard";
 import { useAddCandidateNote, useCandidateDetail } from "../hooks/useCandidates";
 
@@ -84,14 +85,7 @@ export function CandidateDetailPage() {
       <div className="flex flex-col gap-4">
         <ConversationTranscriptCard candidateId={data.candidateId} positionId={data.positionId} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("candidateDetail.videoAnswer")}</CardTitle>
-          </CardHeader>
-          <div className="flex aspect-video items-center justify-center rounded-md bg-slate-900 text-sm text-slate-400">
-            No video submitted yet
-          </div>
-        </Card>
+        <CaseReportCard candidateId={data.candidateId} positionId={data.positionId} />
 
         <Card>
           <CardHeader>
