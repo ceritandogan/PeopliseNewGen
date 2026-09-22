@@ -56,9 +56,14 @@ public sealed class StartCandidateCaseCommandHandler : IRequestHandler<StartCand
     {
         // Lookup by PositionId, not by CaseBotProjectId — beyond IRepository's simple
         // by-id contract, so this reads via AppDbContext directly (same reasoning as
-        // HrBot's StartConversationCommandHandler).
+        // HrBot's StartConversationCommandHandler). A position can have more than one
+        // CaseBotProject (no uniqueness guard); most-recently-created wins — a second
+        // project is expected to mean "re-run with a new config", not "also start cases
+        // under the old one".
         var project = await _context.Set<CaseBotProject>()
-            .SingleOrDefaultAsync(p => p.PositionId == request.PositionId, cancellationToken);
+            .Where(p => p.PositionId == request.PositionId)
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (project is null)
         {

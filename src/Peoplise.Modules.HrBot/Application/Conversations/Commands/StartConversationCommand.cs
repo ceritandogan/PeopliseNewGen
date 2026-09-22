@@ -51,9 +51,14 @@ public sealed class StartConversationCommandHandler : IRequestHandler<StartConve
     {
         // Lookup by PositionId, not by BotProjectId — beyond IRepository's simple by-id
         // contract (see its remarks), so this reads via AppDbContext directly rather
-        // than adding a one-off repository for a single query.
+        // than adding a one-off repository for a single query. A position can have more
+        // than one BotProject (no uniqueness guard); most-recently-created wins — a
+        // second project is expected to mean "re-run with a new config", not "also start
+        // conversations under the old one".
         var botProject = await _context.Set<BotProject>()
-            .SingleOrDefaultAsync(p => p.PositionId == request.PositionId, cancellationToken);
+            .Where(p => p.PositionId == request.PositionId)
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (botProject is null)
         {

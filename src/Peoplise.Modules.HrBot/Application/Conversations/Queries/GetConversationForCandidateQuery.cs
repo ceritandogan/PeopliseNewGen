@@ -27,8 +27,14 @@ public sealed class GetConversationForCandidateQueryHandler : IRequestHandler<Ge
 
     public async Task<Result<Guid?>> Handle(GetConversationForCandidateQuery request, CancellationToken cancellationToken)
     {
+        // A position can have more than one BotProject (no uniqueness guard — see the
+        // CaseBotProject/BotProject creation stage's design notes); most-recently-created
+        // wins, same "re-run with a new config supersedes the old one" reasoning as
+        // StartConversationCommand.
         var botProject = await _context.Set<BotProject>()
-            .SingleOrDefaultAsync(p => p.PositionId == request.PositionId, cancellationToken);
+            .Where(p => p.PositionId == request.PositionId)
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (botProject is null)
             return Result.Success<Guid?>(null);
