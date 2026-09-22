@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { Card, CardHeader, CardTitle, Badge } from "@peoplise/ui";
 import { usePositionsList } from "../hooks/usePositions";
 
@@ -41,7 +42,11 @@ export function DashboardPage() {
             {positions.map((position) => (
               <Card key={position.positionId}>
                 <CardHeader>
-                  <CardTitle>{position.title}</CardTitle>
+                  <CardTitle>
+                    <Link to={`/positions/${position.positionId}`} className="text-brand-600 hover:underline">
+                      {position.title}
+                    </Link>
+                  </CardTitle>
                   <Badge variant="brand">{position.applicantCount}</Badge>
                 </CardHeader>
                 <p className="text-sm text-slate-500">{position.department}</p>
