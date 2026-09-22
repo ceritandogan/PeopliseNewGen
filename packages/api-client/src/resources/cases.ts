@@ -6,6 +6,7 @@ import type {
   CaseReport,
   CodeReviewResult,
   CreateCaseBotProjectRequest,
+  ScoringContext,
   StartCandidateCaseRequest,
   StartCandidateCaseResponse,
 } from "../types";
@@ -38,11 +39,17 @@ export async function submitVideoAnswer(
   });
 }
 
+/** reviewerId is deliberately not a field here — the server derives it from the caller's access token, never from the request body. See CasesController.SubmitScoring. */
 export async function submitReviewerScoring(
   caseId: string,
-  request: { reviewerId: string; stepId: string; competencyId: string; score: number; notes?: string },
+  request: { stepId: string; competencyId: string; score: number; notes?: string },
 ): Promise<void> {
   await httpClient.post(`/api/cases/${caseId}/scorings`, request);
+}
+
+export async function getScoringContext(caseId: string): Promise<ScoringContext> {
+  const { data } = await httpClient.get<ScoringContext>(`/api/cases/${caseId}/scoring-context`);
+  return data;
 }
 
 export async function requestAICodeReview(

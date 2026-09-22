@@ -119,6 +119,14 @@ public sealed class CasesController : ControllerBase
         return result.ToActionResult(this);
     }
 
+    /// <summary>Everything a reviewer needs to fill out the scoring form for this case — see GetScoringContextQuery's remarks.</summary>
+    [HttpGet("{caseId:guid}/scoring-context")]
+    public async Task<IActionResult> GetScoringContext(Guid caseId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetScoringContextQuery(caseId), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
     /// <summary>
     /// HR/panel-only lookup: given a candidate + position (what CandidateDetailPage
     /// already has), finds the matching case, if the candidate has started one.

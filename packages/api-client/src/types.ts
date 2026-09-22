@@ -256,6 +256,22 @@ export interface CaseForCandidateResponse {
   caseId: string | null;
 }
 
+export interface ScorableStep {
+  stepId: string;
+  content: string;
+  relatedCompetencyIds: string[];
+}
+
+export interface Competency {
+  id: string;
+  name: string;
+}
+
+export interface ScoringContext {
+  steps: ScorableStep[];
+  competencies: Competency[];
+}
+
 export interface CandidateComparisonItem {
   caseId: string;
   candidateId: string;

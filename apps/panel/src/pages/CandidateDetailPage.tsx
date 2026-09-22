@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, Badge, Button, Input, useAuth, useToast } 
 import { toApiError } from "@peoplise/api-client";
 import { CaseReportCard } from "../components/CaseReportCard";
 import { ConversationTranscriptCard } from "../components/ConversationTranscriptCard";
+import { ReviewerScoringCard } from "../components/ReviewerScoringCard";
 import { useAddCandidateNote, useCandidateDetail } from "../hooks/useCandidates";
 
 export function CandidateDetailPage() {
@@ -86,6 +87,8 @@ export function CandidateDetailPage() {
         <ConversationTranscriptCard candidateId={data.candidateId} positionId={data.positionId} />
 
         <CaseReportCard candidateId={data.candidateId} positionId={data.positionId} />
+
+        <ReviewerScoringCard candidateId={data.candidateId} positionId={data.positionId} />
 
         <Card>
           <CardHeader>

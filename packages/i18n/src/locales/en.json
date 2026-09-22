@@ -93,7 +93,13 @@
     "noConversation": "Candidate hasn't started the HR chat yet",
     "capturedAnswers": "Captured answers",
     "noCase": "Candidate hasn't started the video interview yet",
-    "caseInProgress": "Video interview in progress — no report yet"
+    "caseInProgress": "Video interview in progress — no report yet",
+    "reviewerScoring": "Reviewer scoring",
+    "noStepsToScore": "Nothing to score yet",
+    "step": "Step",
+    "competency": "Competency",
+    "score": "Score",
+    "scoringNotes": "Notes"
   },
   "bot": {
     "typeYourAnswer": "Type your answer…",

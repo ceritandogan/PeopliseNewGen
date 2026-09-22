@@ -93,7 +93,13 @@
     "noConversation": "Aday henüz İK sohbetine başlamadı",
     "capturedAnswers": "Alınan yanıtlar",
     "noCase": "Aday henüz video mülakata başlamadı",
-    "caseInProgress": "Video mülakat devam ediyor — henüz rapor yok"
+    "caseInProgress": "Video mülakat devam ediyor — henüz rapor yok",
+    "reviewerScoring": "Değerlendirici puanlaması",
+    "noStepsToScore": "Henüz puanlanacak bir şey yok",
+    "step": "Aşama",
+    "competency": "Yetkinlik",
+    "score": "Puan",
+    "scoringNotes": "Notlar"
   },
   "bot": {
     "typeYourAnswer": "Yanıtınızı yazın…",
