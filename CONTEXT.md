@@ -18,3 +18,7 @@ One candidate's run through one `Position`'s pipeline, tracked via `PipelineStat
 **Reviewer**:
 Not a separate domain entity — a `Reviewer` is simply an authenticated panel `User` in the act of scoring a `Case`. `CaseScoring.ReviewerId` is that user's stable id (the JWT `sub` claim), not a role, a job title, or a client-supplied label. There's no "who is allowed to review" concept yet — any authenticated panel user can submit a score (see the app's broader lack of role administration).
 _Avoid_: Treating "Reviewer" as a role/permission concept — it isn't one until a deliberate future decision introduces role-gating.
+
+**Competency vs. CompetencyLevel vs. CompetencyResult**:
+Three distinct things that share a name root. A `Competency` is the assessed trait itself (e.g. "Communication"), owned by a `CaseBotProject`, authored once and reused across every `Case` under that project. A `CompetencyLevel` is a rubric rung on a `Competency` (1-5, with a description) — authoring for these doesn't exist yet, unused by any built feature. A `CompetencyResult` is per-`Case`, per-`Competency` — one candidate's computed weighted-average score for one competency, stored on `Case.AssessmentResult` once `Case.Complete()` runs. `CandidateComparisonItem.CompetencyScores` is just a read view over several cases' `CompetencyResult`s side by side, not a fourth concept.
+_Avoid_: Using "competency score" ambiguously — say whether you mean one case's `CompetencyResult` or the cross-candidate comparison.
