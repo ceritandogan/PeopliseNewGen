@@ -9,17 +9,10 @@ import { toApiError, type CaseBotProjectSummary, type BotProjectSummary } from "
 import { usePositionDashboard } from "../hooks/usePositions";
 import { useCaseBotProjectsForPosition, useCreateCaseBotProject } from "../hooks/useCaseBotProjects";
 import { useBotProjectsForPosition, useCreateBotProject } from "../hooks/useBotProjects";
+import { FlowEditorTab } from "../components/FlowEditorTab";
 
 const TABS = ["overview", "flowEditor"] as const;
 type Tab = (typeof TABS)[number];
-
-const WIREFRAME_STAGES = [
-  { id: "1", name: "Application Form", type: "InformationForm" },
-  { id: "2", name: "Screening Test", type: "ScreeningTest" },
-  { id: "3", name: "Video Interview", type: "VideoInterview" },
-  { id: "4", name: "Reviewer Approval", type: "ReviewerApproval" },
-  { id: "5", name: "Offer", type: "OfferStage" },
-];
 
 const createCaseBotProjectSchema = z.object({
   name: z.string().min(1),
@@ -87,28 +80,7 @@ export function PositionDetailPage() {
         </div>
       )}
 
-      {tab === "flowEditor" && (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm text-slate-500">
-            Wireframe only — drag-and-drop reordering isn't wired up yet, per the architecture doc's own framing
-            ("sürükle-bırak aşama tasarımcısı <strong>wireframe</strong>").
-          </p>
-          <div className="flex gap-3 overflow-x-auto pb-2" aria-label="Workflow stages">
-            {WIREFRAME_STAGES.map((stage, index) => (
-              <div key={stage.id} className="flex items-center gap-3">
-                <Card className="w-48 shrink-0 cursor-grab select-none">
-                  <p className="text-sm font-medium text-slate-900">{stage.name}</p>
-                  <p className="text-xs text-slate-500">{stage.type}</p>
-                </Card>
-                {index < WIREFRAME_STAGES.length - 1 && <span aria-hidden className="text-slate-300">→</span>}
-              </div>
-            ))}
-          </div>
-          <Button variant="outline" className="w-fit">
-            {t("positions.addStage")}
-          </Button>
-        </div>
-      )}
+      {tab === "flowEditor" && positionId && <FlowEditorTab positionId={positionId} />}
     </div>
   );
 }

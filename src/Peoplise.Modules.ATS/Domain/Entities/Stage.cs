@@ -35,4 +35,13 @@ public sealed class Stage : BaseEntity<Guid>
     }
 
     public void AddRule(StageRule rule) => _rules.Add(rule);
+
+    /// <summary>Called only by <c>WorkflowDefinition.ReorderStages</c>, which owns the invariant that every stage in the workflow ends up with a distinct order.</summary>
+    internal void SetOrder(int order)
+    {
+        if (order < 0)
+            throw new ArgumentOutOfRangeException(nameof(order), order, "A stage's order cannot be negative.");
+
+        Order = order;
+    }
 }

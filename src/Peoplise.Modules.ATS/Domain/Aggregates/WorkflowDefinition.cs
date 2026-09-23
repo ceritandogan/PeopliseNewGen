@@ -67,4 +67,48 @@ public sealed class WorkflowDefinition : AggregateRoot<WorkflowDefinitionId>, IH
         _stages.Add(stage);
         return Result.Success(stage);
     }
+
+    /// <summary>
+    /// Replaces every stage's <c>Order</c> with its index in <paramref name="orderedStageIds"/>
+    /// — a full-sequence replacement (what a drag-and-drop drop handler naturally produces),
+    /// not an incremental move, so there's no per-item shifting math to get wrong. Collapses
+    /// any existing "parallel" stages (sharing an order) into a strict sequence — this editor
+    /// only ever expresses a linear order, so a reorder is the one operation that can't
+    /// preserve a parallel grouping it didn't create.
+    /// </summary>
+    public Result ReorderStages(IReadOnlyList<Guid> orderedStageIds)
+    {
+        if (orderedStageIds.Count != _stages.Count || orderedStageIds.Distinct().Count() != orderedStageIds.Count)
+        {
+            return Result.Failure(Error.Validation(
+                "WorkflowDefinition.InvalidReorder", "The reordered list must contain every current stage exactly once."));
+        }
+
+        var stagesById = _stages.ToDictionary(s => s.Id);
+        if (orderedStageIds.Any(id => !stagesById.ContainsKey(id)))
+        {
+            return Result.Failure(Error.Validation(
+                "WorkflowDefinition.UnknownStage", "The reordered list references a stage that isn't part of this workflow."));
+        }
+
+        for (var index = 0; index < orderedStageIds.Count; index++)
+            stagesById[orderedStageIds[index]].SetOrder(index);
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Whether removing this stage is safe (no candidate currently sitting on it) is a
+    /// cross-aggregate check this method can't make — see
+    /// <c>RemoveWorkflowStageCommandHandler</c>, which checks before calling this.
+    /// </summary>
+    public Result RemoveStage(Guid stageId)
+    {
+        var stage = _stages.FirstOrDefault(s => s.Id == stageId);
+        if (stage is null)
+            return Result.Failure(Error.NotFound("WorkflowDefinition.StageNotFound", $"No stage '{stageId}' was found in this workflow."));
+
+        _stages.Remove(stage);
+        return Result.Success();
+    }
 }

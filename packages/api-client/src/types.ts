@@ -309,3 +309,25 @@ export interface CreateBotProjectRequest {
   positionId: string;
   retentionPeriodDays: number;
 }
+
+/** Mirrors ATS's StageType enum. */
+export type StageType =
+  | "InformationForm"
+  | "ScreeningTest"
+  | "VideoInterview"
+  | "DocumentCollection"
+  | "LiveInterview"
+  | "ReviewerApproval"
+  | "OfferStage";
+
+export interface WorkflowStage {
+  id: string;
+  name: string;
+  type: StageType;
+  order: number;
+}
+
+export interface WorkflowStagesResult {
+  workflowDefinitionId: string;
+  stages: WorkflowStage[];
+}

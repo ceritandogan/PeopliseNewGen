@@ -54,6 +54,9 @@
     "team": "İşe alım ekibi",
     "flowEditor": "Akış editörü",
     "addStage": "Aşama ekle",
+    "stageType": "Aşama tipi",
+    "flowEditorHint": "Sırasını değiştirmek için bir aşamayı sürükleyin, kaldırmak için × işaretini kullanın. Üzerinde aday bulunan bir aşama kaldırılamaz.",
+    "noStagesYet": "Henüz aşama yok.",
     "workMode_office": "Ofis",
     "workMode_remote": "Uzaktan",
     "workMode_hybrid": "Hibrit"

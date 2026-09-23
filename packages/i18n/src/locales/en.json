@@ -54,6 +54,9 @@
     "team": "Hiring team",
     "flowEditor": "Flow editor",
     "addStage": "Add stage",
+    "stageType": "Stage type",
+    "flowEditorHint": "Drag a stage to reorder it, or use the × to remove one. A stage with candidates currently on it can't be removed.",
+    "noStagesYet": "No stages yet.",
     "workMode_office": "Office",
     "workMode_remote": "Remote",
     "workMode_hybrid": "Hybrid"
