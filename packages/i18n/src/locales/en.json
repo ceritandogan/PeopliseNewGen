@@ -108,7 +108,19 @@
     "step": "Step",
     "competency": "Competency",
     "score": "Score",
-    "scoringNotes": "Notes"
+    "scoringNotes": "Notes",
+    "aiCodeReview": "AI code review",
+    "codeReviewQuestion": "Question",
+    "candidateCode": "Candidate's code",
+    "requestReview": "Request review",
+    "codeReview": {
+      "readability": "Readability",
+      "functionality": "Functionality",
+      "dataValidation": "Data validation",
+      "useCaseHandling": "Use-case handling",
+      "syntax": "Syntax",
+      "total": "Total"
+    }
   },
   "bot": {
     "typeYourAnswer": "Type your answer…",

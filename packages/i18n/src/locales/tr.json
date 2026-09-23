@@ -108,7 +108,19 @@
     "step": "Aşama",
     "competency": "Yetkinlik",
     "score": "Puan",
-    "scoringNotes": "Notlar"
+    "scoringNotes": "Notlar",
+    "aiCodeReview": "Yapay zeka kod incelemesi",
+    "codeReviewQuestion": "Soru",
+    "candidateCode": "Adayın kodu",
+    "requestReview": "İnceleme iste",
+    "codeReview": {
+      "readability": "Okunabilirlik",
+      "functionality": "İşlevsellik",
+      "dataValidation": "Veri doğrulama",
+      "useCaseHandling": "Kullanım senaryosu",
+      "syntax": "Sözdizimi",
+      "total": "Toplam"
+    }
   },
   "bot": {
     "typeYourAnswer": "Yanıtınızı yazın…",

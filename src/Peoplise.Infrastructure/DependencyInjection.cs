@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using Anthropic;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -66,7 +67,7 @@ public static class DependencyInjection
         services.AddDomainEvents(registry);
         services.AddAuth(configuration, useDevelopmentAuthDefaults);
         services.AddSingleton<ICandidateResourceTokenService, HmacCandidateResourceTokenService>();
-        services.AddMediaAndAI();
+        services.AddMediaAndAI(configuration);
 
         return services;
     }
@@ -74,13 +75,29 @@ public static class DependencyInjection
     /// <summary>
     /// File storage is a real, working local-disk implementation — fine for
     /// development, not for any shared environment (see <see cref="LocalFileStorageService"/>).
-    /// The AI provider is intentionally unimplemented (see <see cref="NotConfiguredAIProvider"/>)
-    /// until a real Azure OpenAI/OpenAI/Claude integration and its credentials exist.
+    /// The AI provider is real (<see cref="AnthropicAIProvider"/>, code review only — see
+    /// its own remarks on why transcription stays unimplemented) once
+    /// <c>AI:Anthropic:ApiKey</c> is configured (<c>scripts/setup-anthropic-key.sh</c>
+    /// walks through getting one); falls back to the loud-failure placeholder otherwise,
+    /// the same "safe until configured" shape <c>Auth:Certificates</c> uses.
     /// </summary>
-    private static IServiceCollection AddMediaAndAI(this IServiceCollection services)
+    private static IServiceCollection AddMediaAndAI(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
-        services.AddSingleton<IAIProvider, NotConfiguredAIProvider>();
+
+        var anthropic = configuration.GetSection("AI:Anthropic");
+        var apiKey = anthropic["ApiKey"];
+
+        if (!string.IsNullOrEmpty(apiKey))
+        {
+            var model = anthropic["Model"] is { Length: > 0 } configuredModel ? configuredModel : "claude-haiku-4-5-20251001";
+            services.AddSingleton(new AnthropicClient { ApiKey = apiKey });
+            services.AddSingleton<IAIProvider>(sp => new AnthropicAIProvider(sp.GetRequiredService<AnthropicClient>(), model));
+        }
+        else
+        {
+            services.AddSingleton<IAIProvider, NotConfiguredAIProvider>();
+        }
 
         return services;
     }

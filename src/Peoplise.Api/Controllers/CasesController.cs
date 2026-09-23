@@ -128,6 +128,23 @@ public sealed class CasesController : ControllerBase
     }
 
     /// <summary>
+    /// Panel-facing, HR pastes in code manually — there's no candidate-facing
+    /// "SoftwareDevelopmentQuestion" step UI yet, so <paramref name="request"/>'s
+    /// <c>StepId</c> is a fresh id the caller mints, not a real step from this case's
+    /// project. No role check, same reasoning as the rest of this controller. Requires
+    /// AI:Anthropic:ApiKey to be configured (see scripts/setup-anthropic-key.sh) — an
+    /// unconfigured IAIProvider throws, which the global exception middleware turns into
+    /// a 500, deliberately (see NotConfiguredAIProvider's own remarks).
+    /// </summary>
+    [HttpPost("{caseId:guid}/code-review")]
+    public async Task<IActionResult> RequestCodeReview(Guid caseId, RequestCodeReviewRequest request, CancellationToken cancellationToken)
+    {
+        var command = new RequestAICodeReviewCommand(caseId, request.StepId, request.Question, request.CandidateCode);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>
     /// HR/panel-only lookup: given a candidate + position (what CandidateDetailPage
     /// already has), finds the matching case, if the candidate has started one.
     /// `caseId: null` is a normal, successful "hasn't started their video interview yet"
@@ -148,6 +165,9 @@ public sealed record WithdrawCaseConsentRequest(string? Reason);
 
 /// <summary>No ReviewerId here — deliberately: it's derived server-side from the caller's access token, never accepted from the client. See CasesController.SubmitScoring.</summary>
 public sealed record SubmitScoringRequest(Guid StepId, Guid CompetencyId, int Score, string? Notes);
+
+/// <summary>StepId is caller-minted — see CasesController.RequestCodeReview's remarks.</summary>
+public sealed record RequestCodeReviewRequest(Guid StepId, string Question, string CandidateCode);
 
 /// <summary>Wraps StartCandidateCaseResult with the candidate access token — see ADR 0004. Every later request for this case must present this token in the X-Candidate-Token header.</summary>
 public sealed record StartCandidateCaseResponse(StartCandidateCaseResult Case, string CandidateToken);

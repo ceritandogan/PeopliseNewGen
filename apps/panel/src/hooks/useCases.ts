@@ -51,3 +51,11 @@ export function useSubmitReviewerScoring(caseId: string | null | undefined) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cases", caseId, "report"] }),
   });
 }
+
+/** stepId is minted by the caller — no candidate-facing "SoftwareDevelopmentQuestion" step exists yet, see CasesController.RequestCodeReview's remarks. */
+export function useRequestAICodeReview(caseId: string | null | undefined) {
+  return useMutation({
+    mutationFn: (request: { question: string; candidateCode: string }) =>
+      casesApi.requestAICodeReview(caseId!, { stepId: crypto.randomUUID(), ...request }),
+  });
+}
