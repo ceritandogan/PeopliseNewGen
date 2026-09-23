@@ -223,6 +223,14 @@ step "Click 'Create Key'."
 step "Give it a name (e.g. 'peoplise-dev') so it's easy to find/revoke later."
 step "Copy the key now — the Console only shows it once."
 ask_secret ANTHROPIC_API_KEY "Paste the API key (starts sk-ant-):"
+# Strip anything a copy-paste can accidentally carry along (trailing newline,
+# \r from a Windows-origin clipboard, leading/trailing spaces) — a key that
+# *looks* right but is a few characters too long fails auth with a message
+# that gives no hint the extra characters are the cause.
+ANTHROPIC_API_KEY="$(printf '%s' "$ANTHROPIC_API_KEY" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+if [[ -n "$ANTHROPIC_API_KEY" && ${#ANTHROPIC_API_KEY} -ne 108 ]]; then
+  warn "That key is ${#ANTHROPIC_API_KEY} characters — real Anthropic keys are usually 108. It may still work, but if the next stage's save fails auth, re-copy just the key with no extra text."
+fi
 
 # ── Stage 3: save it locally ────────────────────────────────────────────────
 stage "Save it to this project's local secrets"
