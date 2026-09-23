@@ -4,6 +4,7 @@ import { Card, DataTable, type DataTableColumn } from "@peoplise/ui";
 import type { CandidateComparisonItem } from "@peoplise/api-client";
 import { useCandidateComparison, useCompetenciesForProject } from "../hooks/useCases";
 import { useCandidateNames } from "../hooks/useCandidates";
+import { CompetencyComparisonChart } from "../components/CompetencyComparisonChart";
 
 export function CandidateComparisonPage() {
   const { t } = useTranslation();
@@ -58,6 +59,8 @@ export function CandidateComparisonPage() {
         </Link>
         <h1 className="text-xl font-semibold text-slate-900">{t("comparison.title")}</h1>
       </div>
+
+      <CompetencyComparisonChart items={items ?? []} competencies={competencies ?? []} names={names} />
 
       <Card>
         <DataTable
