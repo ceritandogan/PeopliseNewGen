@@ -1,6 +1,7 @@
 import { httpClient } from "../http";
 import type {
   CandidateDetail,
+  CandidateNameLookup,
   CandidatePipelineItem,
   PagedResult,
   PipelineStatus,
@@ -58,4 +59,21 @@ export async function addCandidateNote(
 
 export async function transitionCandidateStage(candidateProcessId: string): Promise<void> {
   await httpClient.post(`/api/candidates/${candidateProcessId}/transition`, {});
+}
+
+/**
+ * Bulk name lookup for raw candidate ids (as VideoInterview's Case.CandidateId carries them), scoped to one position.
+ * An id with no matching CandidateProcess is simply omitted. Builds the query string by hand (repeated
+ * `candidateIds=` keys) rather than passing `candidateIds` through axios's default `params` serializer, which
+ * emits `candidateIds[]=` — a shape ASP.NET Core's `[FromQuery] Guid[]` binder silently binds to an empty array.
+ */
+export async function getCandidateNames(
+  positionId: string,
+  candidateIds: string[],
+): Promise<Record<string, CandidateNameLookup>> {
+  const query = new URLSearchParams({ positionId });
+  for (const candidateId of candidateIds) query.append("candidateIds", candidateId);
+
+  const { data } = await httpClient.get<Record<string, CandidateNameLookup>>(`/api/candidates/names?${query}`);
+  return data;
 }

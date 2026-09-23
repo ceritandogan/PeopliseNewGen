@@ -26,6 +26,22 @@ export function useScoringContext(caseId: string | null | undefined) {
   });
 }
 
+export function useCandidateComparison(caseBotProjectId: string | undefined) {
+  return useQuery({
+    queryKey: ["case-bot-projects", caseBotProjectId, "comparison"],
+    queryFn: () => casesApi.getCandidateComparison(caseBotProjectId!),
+    enabled: Boolean(caseBotProjectId),
+  });
+}
+
+export function useCompetenciesForProject(caseBotProjectId: string | undefined) {
+  return useQuery({
+    queryKey: ["case-bot-projects", caseBotProjectId, "competencies"],
+    queryFn: () => casesApi.getCompetenciesForProject(caseBotProjectId!),
+    enabled: Boolean(caseBotProjectId),
+  });
+}
+
 export function useSubmitReviewerScoring(caseId: string | null | undefined) {
   const queryClient = useQueryClient();
 

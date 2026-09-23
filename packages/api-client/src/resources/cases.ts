@@ -5,6 +5,7 @@ import type {
   CaseForCandidateResponse,
   CaseReport,
   CodeReviewResult,
+  Competency,
   CreateCaseBotProjectRequest,
   ScoringContext,
   StartCandidateCaseRequest,
@@ -87,5 +88,11 @@ export async function createCaseBotProject(request: CreateCaseBotProjectRequest)
 
 export async function getCaseBotProjectsForPosition(positionId: string): Promise<CaseBotProjectSummary[]> {
   const { data } = await httpClient.get<CaseBotProjectSummary[]>("/api/case-bot-projects", { params: { positionId } });
+  return data;
+}
+
+/** Column headers (id+name) for the candidate comparison table — independent of any one case. */
+export async function getCompetenciesForProject(caseBotProjectId: string): Promise<Competency[]> {
+  const { data } = await httpClient.get<Competency[]>(`/api/case-bot-projects/${caseBotProjectId}/competencies`);
   return data;
 }

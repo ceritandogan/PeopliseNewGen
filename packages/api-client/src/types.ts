@@ -279,6 +279,11 @@ export interface CandidateComparisonItem {
   competencyScores: Record<string, number>;
 }
 
+export interface CandidateNameLookup {
+  candidateProcessId: string;
+  name: string;
+}
+
 export interface CaseBotProjectSummary {
   id: string;
   name: string;

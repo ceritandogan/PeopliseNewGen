@@ -6,6 +6,7 @@ import { PositionsListPage } from "./pages/PositionsListPage";
 import { PositionDetailPage } from "./pages/PositionDetailPage";
 import { CandidatePipelinePage } from "./pages/CandidatePipelinePage";
 import { CandidateDetailPage } from "./pages/CandidateDetailPage";
+import { CandidateComparisonPage } from "./pages/CandidateComparisonPage";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { ForbiddenPage } from "./pages/ForbiddenPage";
@@ -24,6 +25,10 @@ export function App() {
           <Route path="positions" element={<PositionsListPage />} />
           <Route path="positions/:positionId" element={<PositionDetailPage />} />
           <Route path="positions/:positionId/pipeline" element={<CandidatePipelinePage />} />
+          <Route
+            path="positions/:positionId/case-bot-projects/:caseBotProjectId/comparison"
+            element={<CandidateComparisonPage />}
+          />
           <Route path="candidates/:candidateProcessId" element={<CandidateDetailPage />} />
         </Route>
       </Route>

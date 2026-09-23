@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -155,12 +155,20 @@ function CaseBotProjectsCard({ positionId }: { positionId: string }) {
       ) : data && data.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {data.map((project: CaseBotProjectSummary) => (
-            <li key={project.id} className="flex items-center justify-between text-sm">
-              <span className="font-medium text-slate-900">{project.name}</span>
-              <span className="text-slate-500">
-                {t("positionDetail.retakesAllowed")}: {project.retakesAllowed} · {t("positionDetail.retentionPeriodDays")}:{" "}
-                {project.retentionPeriodDays}
-              </span>
+            <li key={project.id} className="flex flex-col gap-1 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-slate-900">{project.name}</span>
+                <span className="text-slate-500">
+                  {t("positionDetail.retakesAllowed")}: {project.retakesAllowed} · {t("positionDetail.retentionPeriodDays")}:{" "}
+                  {project.retentionPeriodDays}
+                </span>
+              </div>
+              <Link
+                to={`/positions/${positionId}/case-bot-projects/${project.id}/comparison`}
+                className="text-brand-600 hover:underline"
+              >
+                {t("positionDetail.viewComparison")}
+              </Link>
             </li>
           ))}
         </ul>

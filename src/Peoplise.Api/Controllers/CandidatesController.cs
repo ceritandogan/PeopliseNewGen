@@ -56,5 +56,13 @@ public sealed class CandidatesController : ControllerBase
         return result.ToActionResult(this);
     }
 
+    /// <summary>Panel-facing bulk name lookup for raw candidate ids — see GetCandidateNamesQuery's remarks.</summary>
+    [HttpGet("names")]
+    public async Task<IActionResult> GetNames([FromQuery] Guid positionId, [FromQuery] Guid[] candidateIds, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetCandidateNamesQuery(positionId, candidateIds), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
     public sealed record AddNoteRequest(string AuthorId, string Text, bool IsPrivate);
 }

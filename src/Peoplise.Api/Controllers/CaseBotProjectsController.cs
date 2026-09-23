@@ -61,6 +61,14 @@ public sealed class CaseBotProjectsController : ControllerBase
         var result = await _mediator.Send(new GetCandidateComparisonQuery(caseBotProjectId), cancellationToken);
         return result.ToActionResult(this);
     }
+
+    /// <summary>Column headers (id+name) for the comparison view — see GetCompetenciesForProjectQuery's remarks.</summary>
+    [HttpGet("{caseBotProjectId:guid}/competencies")]
+    public async Task<IActionResult> GetCompetencies(Guid caseBotProjectId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetCompetenciesForProjectQuery(caseBotProjectId), cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
 
 public sealed record AddCompetencyRequest(string Name, string? Description);

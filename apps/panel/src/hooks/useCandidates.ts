@@ -35,3 +35,11 @@ export function useAddCandidateNote(candidateProcessId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["candidates", candidateProcessId] }),
   });
 }
+
+export function useCandidateNames(positionId: string | undefined, candidateIds: string[]) {
+  return useQuery({
+    queryKey: ["candidates", "names", positionId, candidateIds],
+    queryFn: () => candidatesApi.getCandidateNames(positionId!, candidateIds),
+    enabled: Boolean(positionId) && candidateIds.length > 0,
+  });
+}
