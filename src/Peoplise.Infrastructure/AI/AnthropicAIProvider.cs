@@ -37,13 +37,18 @@ public sealed class AnthropicAIProvider : IAIProvider
         var schema = new Dictionary<string, JsonElement>
         {
             ["type"] = JsonSerializer.SerializeToElement("object"),
+            ["additionalProperties"] = JsonSerializer.SerializeToElement(false),
+            // Anthropic's structured-output schema is a restricted JSON Schema dialect —
+            // "minimum"/"maximum" on an integer property is rejected outright ("are not
+            // supported"), so the 0-20 range is prompt-instructed instead and clamped
+            // defensively below rather than schema-enforced.
             ["properties"] = JsonSerializer.SerializeToElement(new
             {
-                readability = new { type = "integer", minimum = 0, maximum = CodeReviewResult.MaxPerDimension },
-                functionality = new { type = "integer", minimum = 0, maximum = CodeReviewResult.MaxPerDimension },
-                dataValidation = new { type = "integer", minimum = 0, maximum = CodeReviewResult.MaxPerDimension },
-                useCaseHandling = new { type = "integer", minimum = 0, maximum = CodeReviewResult.MaxPerDimension },
-                syntax = new { type = "integer", minimum = 0, maximum = CodeReviewResult.MaxPerDimension },
+                readability = new { type = "integer" },
+                functionality = new { type = "integer" },
+                dataValidation = new { type = "integer" },
+                useCaseHandling = new { type = "integer" },
+                syntax = new { type = "integer" },
             }),
             ["required"] = JsonSerializer.SerializeToElement(
                 new[] { "readability", "functionality", "dataValidation", "useCaseHandling", "syntax" }),
@@ -84,10 +89,13 @@ public sealed class AnthropicAIProvider : IAIProvider
         var root = document.RootElement;
 
         return new CodeReviewResult(
-            Readability: root.GetProperty("readability").GetInt32(),
-            Functionality: root.GetProperty("functionality").GetInt32(),
-            DataValidation: root.GetProperty("dataValidation").GetInt32(),
-            UseCaseHandling: root.GetProperty("useCaseHandling").GetInt32(),
-            Syntax: root.GetProperty("syntax").GetInt32());
+            Readability: ClampDimension(root.GetProperty("readability").GetInt32()),
+            Functionality: ClampDimension(root.GetProperty("functionality").GetInt32()),
+            DataValidation: ClampDimension(root.GetProperty("dataValidation").GetInt32()),
+            UseCaseHandling: ClampDimension(root.GetProperty("useCaseHandling").GetInt32()),
+            Syntax: ClampDimension(root.GetProperty("syntax").GetInt32()));
     }
+
+    /// <summary>The 0-20 range is prompt-instructed, not schema-enforced (see the schema's remarks) — clamp defensively.</summary>
+    private static int ClampDimension(int value) => Math.Clamp(value, 0, CodeReviewResult.MaxPerDimension);
 }
