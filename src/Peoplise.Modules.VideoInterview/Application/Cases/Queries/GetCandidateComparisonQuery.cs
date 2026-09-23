@@ -32,17 +32,20 @@ public sealed class GetCandidateComparisonQueryHandler
         var projectId = CaseBotProjectId.From(request.CaseBotProjectId);
 
         var completedCases = await _context.Set<Case>()
-            .Include(c => c.AssessmentResult)
             .Where(c => c.CaseBotProjectId == projectId && c.Status == CaseStatus.Completed)
             .ToListAsync(cancellationToken);
 
+        // Computed live from each case's Scorings, not the stale-by-design AssessmentResult
+        // snapshot Complete() took — a reviewer scoring after completion (the normal order)
+        // would otherwise never show up here. See ADR 0006.
         var items = completedCases
-            .Where(c => c.AssessmentResult is not null && c.AssessmentResult.CompetencyResults.Count > 0)
-            .Select(c =>
+            .Select(c => (Case: c, Results: c.GetCurrentCompetencyResults()))
+            .Where(x => x.Results.Count > 0)
+            .Select(x =>
             {
-                var scores = c.AssessmentResult!.CompetencyResults.ToDictionary(r => r.CompetencyId, r => r.Score);
+                var scores = x.Results.ToDictionary(r => r.CompetencyId, r => r.Score);
                 var overall = Math.Round(scores.Values.Average(), 2);
-                return new CandidateComparisonItem(c.Id.Value, c.CandidateId, overall, scores);
+                return new CandidateComparisonItem(x.Case.Id.Value, x.Case.CandidateId, overall, scores);
             })
             .OrderByDescending(item => item.OverallScore)
             .ToList();

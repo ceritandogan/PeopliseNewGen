@@ -188,18 +188,39 @@ public sealed class Case : AggregateRoot<CaseId>, IHasTenant, IAuditableEntity
         return Result.Success(Math.Round(weightedSum / totalWeight, 2));
     }
 
+    /// <summary>
+    /// Every competency this case has at least one scoring for, right now — computed
+    /// fresh from <see cref="Scorings"/> on every call, never cached. This is the source
+    /// of truth for reads (comparison, reports): <see cref="AssessmentResult"/> is only
+    /// ever a one-time snapshot taken when <see cref="Complete"/> ran, and a reviewer
+    /// scoring a case after it already completed — the normal order, since scoring is
+    /// post-hoc human review — would never be reflected there.
+    /// </summary>
+    public IReadOnlyList<Entities.CompetencyResult> GetCurrentCompetencyResults()
+    {
+        var results = new List<Entities.CompetencyResult>();
+        foreach (var competencyId in _scorings.Select(s => s.CompetencyId).Distinct())
+        {
+            var competencyScore = CalculateCompetencyResult(competencyId);
+            if (competencyScore.IsSuccess)
+                results.Add(new Entities.CompetencyResult(Guid.NewGuid(), competencyId, competencyScore.Value));
+        }
+
+        return results;
+    }
+
     public Result Complete(DateTimeOffset completedAt)
     {
         if (!IsOpen)
             return Result.Failure(Error.Conflict("Case.AlreadyClosed", "This case has already ended."));
 
+        // A write-only historical snapshot from this exact moment — kept for the KVKK
+        // "statistical data preserved" intent behind AnonymizeMediaAndIdentity (see its
+        // remarks), not read back by anything. Reads always go through
+        // GetCurrentCompetencyResults() instead — see ADR 0006.
         var result = new CaseResult(Guid.NewGuid(), completedAt);
-        foreach (var competencyId in _scorings.Select(s => s.CompetencyId).Distinct())
-        {
-            var competencyScore = CalculateCompetencyResult(competencyId);
-            if (competencyScore.IsSuccess)
-                result.AddCompetencyResult(new Entities.CompetencyResult(Guid.NewGuid(), competencyId, competencyScore.Value));
-        }
+        foreach (var competencyResult in GetCurrentCompetencyResults())
+            result.AddCompetencyResult(competencyResult);
 
         AssessmentResult = result;
         Status = CaseStatus.Completed;
@@ -275,10 +296,14 @@ public sealed class Case : AggregateRoot<CaseId>, IHasTenant, IAuditableEntity
         var isCompetencySection = sectionTitle.Contains("competenc", StringComparison.OrdinalIgnoreCase)
             || sectionTitle.Contains("yetkinlik", StringComparison.OrdinalIgnoreCase);
 
-        if (isCompetencySection && AssessmentResult is not null && AssessmentResult.CompetencyResults.Count > 0)
+        if (isCompetencySection)
         {
-            var lines = AssessmentResult.CompetencyResults.Select(r => $"{r.CompetencyId}: {r.Score:0.##}/100");
-            return string.Join(Environment.NewLine, lines);
+            var currentResults = GetCurrentCompetencyResults();
+            if (currentResults.Count > 0)
+            {
+                var lines = currentResults.Select(r => $"{r.CompetencyId}: {r.Score:0.##}/100");
+                return string.Join(Environment.NewLine, lines);
+            }
         }
 
         if (isCompetencySection)
