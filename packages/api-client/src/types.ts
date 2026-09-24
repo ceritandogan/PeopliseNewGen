@@ -262,9 +262,23 @@ export interface ScorableStep {
   relatedCompetencyIds: string[];
 }
 
+export interface CompetencyLevel {
+  id: string;
+  level: number;
+  description: string;
+}
+
+export interface CompetencyIndicator {
+  id: string;
+  description: string;
+}
+
 export interface Competency {
   id: string;
   name: string;
+  description: string | null;
+  levels: CompetencyLevel[];
+  indicators: CompetencyIndicator[];
 }
 
 export interface ScoringContext {

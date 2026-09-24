@@ -143,6 +143,12 @@ function CaseBotProjectsCard({ positionId }: { positionId: string }) {
                   {t("positionDetail.editQuestions")}
                 </Link>
                 <Link
+                  to={`/positions/${positionId}/case-bot-projects/${project.id}/competencies`}
+                  className="text-brand-600 hover:underline"
+                >
+                  {t("positionDetail.editCompetencies")}
+                </Link>
+                <Link
                   to={`/positions/${positionId}/case-bot-projects/${project.id}/comparison`}
                   className="text-brand-600 hover:underline"
                 >

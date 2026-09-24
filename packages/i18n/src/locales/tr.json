@@ -127,7 +127,22 @@
     "botStepContent": "Mesaj / soru",
     "addBotStep": "Adım ekle",
     "botStepAdded": "Adım eklendi.",
-    "noBotStepsYet": "Henüz adım yok."
+    "noBotStepsYet": "Henüz adım yok.",
+    "editCompetencies": "Yetkinlikleri düzenle",
+    "competencies": "Yetkinlikler",
+    "competenciesHint": "Yetkinlikler, değerlendiricilerin puanladığı rubrik boyutlarıdır. Seviyeler her 1-5 basamağının neye karşılık geldiğini, göstergeler ise herhangi bir seviyeden bağımsız gözlemlenebilir davranışları tanımlar.",
+    "addCompetency": "Yetkinlik ekle",
+    "competencyAdded": "Yetkinlik eklendi.",
+    "description": "Açıklama",
+    "level": "Seviye",
+    "levelDescription": "Bu seviye neye benzer",
+    "levelAdded": "Seviye eklendi.",
+    "levels": "Seviyeler",
+    "noLevelsYet": "Henüz seviye yok.",
+    "indicatorDescription": "Gözlemlenebilir davranış",
+    "indicatorAdded": "Gösterge eklendi.",
+    "indicators": "Davranışsal göstergeler",
+    "noIndicatorsYet": "Henüz gösterge yok."
   },
   "comparison": {
     "title": "Aday karşılaştırma",

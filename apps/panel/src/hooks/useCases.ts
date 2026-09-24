@@ -38,11 +38,44 @@ export function useCandidateComparison(caseBotProjectId: string | undefined) {
   });
 }
 
+function competenciesQueryKey(caseBotProjectId: string | undefined) {
+  return ["case-bot-projects", caseBotProjectId, "competencies"];
+}
+
 export function useCompetenciesForProject(caseBotProjectId: string | undefined) {
   return useQuery({
-    queryKey: ["case-bot-projects", caseBotProjectId, "competencies"],
+    queryKey: competenciesQueryKey(caseBotProjectId),
     queryFn: () => casesApi.getCompetenciesForProject(caseBotProjectId!),
     enabled: Boolean(caseBotProjectId),
+  });
+}
+
+export function useAddCompetency(caseBotProjectId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: { name: string; description?: string }) => casesApi.addCompetency(caseBotProjectId!, request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: competenciesQueryKey(caseBotProjectId) }),
+  });
+}
+
+export function useAddCompetencyLevel(caseBotProjectId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ competencyId, ...request }: { competencyId: string; level: number; description: string }) =>
+      casesApi.addCompetencyLevel(caseBotProjectId!, competencyId, request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: competenciesQueryKey(caseBotProjectId) }),
+  });
+}
+
+export function useAddCompetencyIndicator(caseBotProjectId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ competencyId, ...request }: { competencyId: string; description: string }) =>
+      casesApi.addCompetencyIndicator(caseBotProjectId!, competencyId, request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: competenciesQueryKey(caseBotProjectId) }),
   });
 }
 

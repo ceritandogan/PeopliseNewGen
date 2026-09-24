@@ -93,9 +93,38 @@ export async function getCaseBotProjectsForPosition(positionId: string): Promise
   return data;
 }
 
-/** Column headers (id+name) for the candidate comparison table — independent of any one case. */
+/** Also carries each competency's rubric (levels/indicators) — the comparison table and reviewer-scoring dropdown just ignore those fields. */
 export async function getCompetenciesForProject(caseBotProjectId: string): Promise<Competency[]> {
   const { data } = await httpClient.get<Competency[]>(`/api/case-bot-projects/${caseBotProjectId}/competencies`);
+  return data;
+}
+
+export async function addCompetency(caseBotProjectId: string, request: { name: string; description?: string }): Promise<string> {
+  const { data } = await httpClient.post<string>(`/api/case-bot-projects/${caseBotProjectId}/competencies`, request);
+  return data;
+}
+
+export async function addCompetencyLevel(
+  caseBotProjectId: string,
+  competencyId: string,
+  request: { level: number; description: string },
+): Promise<string> {
+  const { data } = await httpClient.post<string>(
+    `/api/case-bot-projects/${caseBotProjectId}/competencies/${competencyId}/levels`,
+    request,
+  );
+  return data;
+}
+
+export async function addCompetencyIndicator(
+  caseBotProjectId: string,
+  competencyId: string,
+  request: { description: string },
+): Promise<string> {
+  const { data } = await httpClient.post<string>(
+    `/api/case-bot-projects/${caseBotProjectId}/competencies/${competencyId}/indicators`,
+    request,
+  );
   return data;
 }
 

@@ -94,9 +94,31 @@ public sealed class CaseBotProjectsController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult(this);
     }
+
+    [HttpPost("{caseBotProjectId:guid}/competencies/{competencyId:guid}/levels")]
+    public async Task<IActionResult> AddCompetencyLevel(
+        Guid caseBotProjectId, Guid competencyId, AddCompetencyLevelRequest request, CancellationToken cancellationToken)
+    {
+        var command = new AddCompetencyLevelCommand(caseBotProjectId, competencyId, request.Level, request.Description);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{caseBotProjectId:guid}/competencies/{competencyId:guid}/indicators")]
+    public async Task<IActionResult> AddCompetencyIndicator(
+        Guid caseBotProjectId, Guid competencyId, AddCompetencyIndicatorRequest request, CancellationToken cancellationToken)
+    {
+        var command = new AddCompetencyIndicatorCommand(caseBotProjectId, competencyId, request.Description);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
 
 public sealed record AddCompetencyRequest(string Name, string? Description);
+
+public sealed record AddCompetencyLevelRequest(int Level, string Description);
+
+public sealed record AddCompetencyIndicatorRequest(string Description);
 
 public sealed record AddFlowRequest(string Name, bool IsDefault);
 

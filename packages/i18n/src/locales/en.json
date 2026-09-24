@@ -127,7 +127,22 @@
     "botStepContent": "Message / question",
     "addBotStep": "Add step",
     "botStepAdded": "Step added.",
-    "noBotStepsYet": "No steps yet."
+    "noBotStepsYet": "No steps yet.",
+    "editCompetencies": "Edit competencies",
+    "competencies": "Competencies",
+    "competenciesHint": "Competencies are the assessment rubric reviewers score against. Levels describe what each 1-5 rung looks like; indicators are observable behaviors, independent of any one level.",
+    "addCompetency": "Add competency",
+    "competencyAdded": "Competency added.",
+    "description": "Description",
+    "level": "Level",
+    "levelDescription": "What this level looks like",
+    "levelAdded": "Level added.",
+    "levels": "Levels",
+    "noLevelsYet": "No levels yet.",
+    "indicatorDescription": "Observable behavior",
+    "indicatorAdded": "Indicator added.",
+    "indicators": "Behavioral indicators",
+    "noIndicatorsYet": "No indicators yet."
   },
   "comparison": {
     "title": "Candidate comparison",
