@@ -110,8 +110,8 @@ export interface CandidateDetail {
   evaluations: CandidateEvaluationDetail[];
 }
 
+/** No evaluatorId here — deliberately: it's derived server-side from the caller's access token. See CandidatesController.SubmitEvaluation. */
 export interface SubmitEvaluationRequest {
-  evaluatorId: string;
   score: number;
   comments?: string;
 }

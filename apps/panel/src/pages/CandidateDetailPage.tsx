@@ -7,19 +7,26 @@ import { CaseReportCard } from "../components/CaseReportCard";
 import { ConversationTranscriptCard } from "../components/ConversationTranscriptCard";
 import { ReviewerScoringCard } from "../components/ReviewerScoringCard";
 import { AICodeReviewCard } from "../components/AICodeReviewCard";
-import { useAddCandidateNote, useCandidateDetail } from "../hooks/useCandidates";
+import { useAddCandidateNote, useCandidateDetail, useSubmitEvaluation } from "../hooks/useCandidates";
+import { useWorkflowStages } from "../hooks/useWorkflowStages";
 
 export function CandidateDetailPage() {
   const { t } = useTranslation();
   const { candidateProcessId } = useParams<{ candidateProcessId: string }>();
   const { data, isLoading } = useCandidateDetail(candidateProcessId);
   const addNote = useAddCandidateNote(candidateProcessId ?? "");
+  const submitEvaluation = useSubmitEvaluation(candidateProcessId ?? "");
+  const stages = useWorkflowStages(data?.positionId);
   const { session } = useAuth();
   const { show } = useToast();
   const [noteText, setNoteText] = useState("");
+  const [evaluationScore, setEvaluationScore] = useState("");
+  const [evaluationComments, setEvaluationComments] = useState("");
 
   if (isLoading) return <p className="text-sm text-slate-500">{t("common.loading")}</p>;
   if (!data) return <p className="text-sm text-slate-500">{t("common.noResults")}</p>;
+
+  const currentStageName = stages.data?.stages.find((stage) => stage.id === data.currentStageId)?.name;
 
   const submitNote = async () => {
     if (!noteText.trim()) return;
@@ -27,6 +34,19 @@ export function CandidateDetailPage() {
       await addNote.mutateAsync({ authorId: session?.user.email ?? "unknown", text: noteText, isPrivate: false });
       setNoteText("");
       show("Note added.", "success");
+    } catch (error) {
+      show(toApiError(error).title, "error");
+    }
+  };
+
+  const submitEvaluationForm = async () => {
+    const score = Number(evaluationScore);
+    if (!evaluationScore || Number.isNaN(score)) return;
+    try {
+      await submitEvaluation.mutateAsync({ score, comments: evaluationComments || undefined });
+      setEvaluationScore("");
+      setEvaluationComments("");
+      show(t("candidateDetail.evaluationAdded") as string, "success");
     } catch (error) {
       show(toApiError(error).title, "error");
     }
@@ -45,6 +65,12 @@ export function CandidateDetailPage() {
             <dd className="text-slate-900">{data.candidateName}</dd>
             <dt className="text-slate-500">Email</dt>
             <dd className="text-slate-900">{data.candidateEmail}</dd>
+            {data.currentStageId && (
+              <>
+                <dt className="text-slate-500">{t("candidateDetail.currentStage")}</dt>
+                <dd className="text-slate-900">{currentStageName ?? data.currentStageId}</dd>
+              </>
+            )}
             {data.candidatePhone && (
               <>
                 <dt className="text-slate-500">Phone</dt>
@@ -81,6 +107,29 @@ export function CandidateDetailPage() {
             ))}
             {data.evaluations.length === 0 && <li className="text-sm text-slate-400">{t("common.noResults")}</li>}
           </ol>
+
+          <div className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3">
+            <Input
+              label={t("candidateDetail.evaluationScore") as string}
+              type="number"
+              min={0}
+              max={100}
+              value={evaluationScore}
+              onChange={(event) => setEvaluationScore(event.target.value)}
+            />
+            <Input
+              label={t("candidateDetail.evaluationComments") as string}
+              value={evaluationComments}
+              onChange={(event) => setEvaluationComments(event.target.value)}
+            />
+            <Button
+              onClick={submitEvaluationForm}
+              disabled={submitEvaluation.isPending || !evaluationScore.trim()}
+              className="w-fit"
+            >
+              {t("candidateDetail.submitEvaluation")}
+            </Button>
+          </div>
         </Card>
       </div>
 

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -5,6 +6,7 @@ using Peoplise.Modules.ATS.Application.Candidates.Commands;
 using Peoplise.Modules.ATS.Application.Candidates.Queries;
 using Peoplise.Modules.ATS.Application.Positions.Queries;
 using Peoplise.SharedKernel.MultiTenancy;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Peoplise.Api.Controllers;
 
@@ -48,6 +50,27 @@ public sealed class CandidatesController : ControllerBase
         return result.IsSuccess ? Ok(new { id = result.Value }) : result.ToActionResult(this);
     }
 
+    /// <summary>
+    /// The evaluator is whoever the access token's <c>sub</c> claim says is making the
+    /// call — never taken from the request body — same reasoning as
+    /// CasesController.SubmitScoring. Score-based stage rules (see WorkflowsController's
+    /// rule endpoints) may silently auto-advance or auto-eliminate the candidate as a
+    /// side effect of this call; the client sees that by re-fetching GetDetail, not from
+    /// this response. No role check: same "no role administration exists yet" reasoning
+    /// as the rest of this controller.
+    /// </summary>
+    [HttpPost("{candidateProcessId:guid}/evaluations")]
+    public async Task<IActionResult> SubmitEvaluation(Guid candidateProcessId, SubmitEvaluationRequest request, CancellationToken cancellationToken)
+    {
+        var evaluatorId = User.FindFirstValue(Claims.Subject);
+        if (string.IsNullOrEmpty(evaluatorId))
+            return Unauthorized();
+
+        var command = new SubmitEvaluationCommand(candidateProcessId, evaluatorId, request.Score, request.Comments);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
     [HttpPost("{candidateProcessId:guid}/notes")]
     public async Task<IActionResult> AddNote(Guid candidateProcessId, AddNoteRequest request, CancellationToken cancellationToken)
     {
@@ -65,4 +88,7 @@ public sealed class CandidatesController : ControllerBase
     }
 
     public sealed record AddNoteRequest(string AuthorId, string Text, bool IsPrivate);
+
+    /// <summary>No EvaluatorId here — deliberately: it's derived server-side from the caller's access token, never accepted from the client. See SubmitEvaluation.</summary>
+    public sealed record SubmitEvaluationRequest(decimal Score, string? Comments);
 }
