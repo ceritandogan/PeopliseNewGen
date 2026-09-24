@@ -56,6 +56,15 @@ public sealed class AddStepCommandHandler : IRequestHandler<AddStepCommand, Resu
         if (flow is null)
             return Result.Failure<Guid>(Error.NotFound("BotProject.FlowNotFound", $"No flow '{request.FlowId}' was found on this project."));
 
+        // A CaptureVariableKey that doesn't match any declared ProjectVariable would
+        // silently capture into a variable nothing else ever references — reject it at
+        // authoring time, same reasoning as AddStepRouteCommand validating its targets.
+        if (request.CaptureVariableKey is not null && project.FindVariableByKey(request.CaptureVariableKey) is null)
+        {
+            return Result.Failure<Guid>(Error.NotFound(
+                "BotProject.VariableNotFound", $"No declared variable '{request.CaptureVariableKey}' was found on this project."));
+        }
+
         var result = flow.AddStep(
             request.Type, request.Content, request.Order,
             request.QuickReplyOptions, request.CaptureVariableKey, request.IsFinalStep, request.IsScreenOut);

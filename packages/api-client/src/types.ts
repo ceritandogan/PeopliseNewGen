@@ -384,6 +384,13 @@ export interface BotFlow {
   steps: BotFlowStep[];
 }
 
+/** The definition of a variable a project's WaitResponse steps can capture answers into — distinct from the per-conversation captured value. */
+export interface ProjectVariable {
+  id: string;
+  key: string;
+  description: string | null;
+}
+
 export interface AddBotStepRequest {
   type: StepType;
   content: string;

@@ -102,4 +102,40 @@ public class AddStepCommandHandlerTests
         result.Error.Code.Should().Be("Flow.DuplicateStepOrder");
         await unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task Rejects_a_capture_variable_key_that_is_not_a_declared_project_variable()
+    {
+        var project = CreateProjectWithFlow(out var flowId);
+        var projects = Substitute.For<IRepository<BotProject, BotProjectId>>();
+        projects.GetByIdAsync(Arg.Any<BotProjectId>(), Arg.Any<CancellationToken>()).Returns(project);
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+        var handler = new AddStepCommandHandler(projects, unitOfWork);
+
+        var result = await handler.Handle(
+            new AddStepCommand(project.Id.Value, flowId, StepType.WaitResponse, "What's your notice period?", 0, null, "noticePeriodWeeks", false, false),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("BotProject.VariableNotFound");
+        await unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Adds_a_step_whose_capture_variable_key_is_a_declared_project_variable()
+    {
+        var project = CreateProjectWithFlow(out var flowId);
+        project.AddVariable("noticePeriodWeeks", null);
+        var projects = Substitute.For<IRepository<BotProject, BotProjectId>>();
+        projects.GetByIdAsync(Arg.Any<BotProjectId>(), Arg.Any<CancellationToken>()).Returns(project);
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+        var handler = new AddStepCommandHandler(projects, unitOfWork);
+
+        var result = await handler.Handle(
+            new AddStepCommand(project.Id.Value, flowId, StepType.WaitResponse, "What's your notice period?", 0, null, "noticePeriodWeeks", false, false),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
 }

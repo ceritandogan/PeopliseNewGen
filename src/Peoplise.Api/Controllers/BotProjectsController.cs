@@ -89,9 +89,26 @@ public sealed class BotProjectsController : ControllerBase
         var result = await _mediator.Send(new RemoveStepRouteCommand(botProjectId, flowId, stepId, routeId), cancellationToken);
         return result.ToActionResult(this);
     }
+
+    [HttpGet("{botProjectId:guid}/variables")]
+    public async Task<IActionResult> GetVariables(Guid botProjectId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetVariablesForProjectQuery(botProjectId), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{botProjectId:guid}/variables")]
+    public async Task<IActionResult> AddVariable(Guid botProjectId, AddVariableRequest request, CancellationToken cancellationToken)
+    {
+        var command = new AddVariableCommand(botProjectId, request.Key, request.Description);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
 
 public sealed record AddBotFlowRequest(string Name, bool IsDefault);
+
+public sealed record AddVariableRequest(string Key, string? Description);
 
 public sealed record AddBotStepRequest(
     Peoplise.Modules.HrBot.Domain.ValueObjects.StepType Type,

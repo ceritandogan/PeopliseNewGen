@@ -68,3 +68,24 @@ export function useRemoveBotStepRoute(botProjectId: string | undefined) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: botFlowsQueryKey(botProjectId) }),
   });
 }
+
+function variablesQueryKey(botProjectId: string | undefined) {
+  return ["bot-projects", botProjectId, "variables"];
+}
+
+export function useVariablesForProject(botProjectId: string | undefined) {
+  return useQuery({
+    queryKey: variablesQueryKey(botProjectId),
+    queryFn: () => botProjectsApi.getVariablesForProject(botProjectId!),
+    enabled: Boolean(botProjectId),
+  });
+}
+
+export function useAddVariable(botProjectId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: { key: string; description?: string }) => botProjectsApi.addVariable(botProjectId!, request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: variablesQueryKey(botProjectId) }),
+  });
+}

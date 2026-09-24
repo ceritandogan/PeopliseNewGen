@@ -2,13 +2,22 @@ import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Button, Card, CardHeader, CardTitle, Input, useToast } from "@peoplise/ui";
-import { toApiError, type BotConditionType, type BotFlow, type BotStepRouteType, type StepType } from "@peoplise/api-client";
+import {
+  toApiError,
+  type BotConditionType,
+  type BotFlow,
+  type BotStepRouteType,
+  type ProjectVariable,
+  type StepType,
+} from "@peoplise/api-client";
 import {
   useAddBotFlow,
   useAddBotStep,
   useAddBotStepRoute,
+  useAddVariable,
   useFlowsForBotProject,
   useRemoveBotStepRoute,
+  useVariablesForProject,
 } from "../hooks/useBotProjects";
 
 const STEP_TYPES: StepType[] = [
@@ -244,7 +253,7 @@ function BotStepRow({ step, flow, flows, botProjectId }: { step: BotFlow["steps"
   );
 }
 
-function AddStepForm({ flow, botProjectId }: { flow: BotFlow; botProjectId: string }) {
+function AddStepForm({ flow, botProjectId, variables }: { flow: BotFlow; botProjectId: string; variables: ProjectVariable[] }) {
   const { t } = useTranslation();
   const { show } = useToast();
   const addStep = useAddBotStep(botProjectId);
@@ -266,7 +275,7 @@ function AddStepForm({ flow, botProjectId }: { flow: BotFlow; botProjectId: stri
         content,
         order: nextOrder,
         quickReplyOptions: type === "SendQuickReply" ? splitKeywords(quickReplyOptionsText) : null,
-        captureVariableKey: type === "WaitResponse" && captureVariableKey.trim() ? captureVariableKey.trim() : null,
+        captureVariableKey: type === "WaitResponse" && captureVariableKey ? captureVariableKey : null,
         isFinalStep,
         isScreenOut: isFinalStep && isScreenOut,
       });
@@ -308,11 +317,23 @@ function AddStepForm({ flow, botProjectId }: { flow: BotFlow; botProjectId: stri
       )}
 
       {type === "WaitResponse" && (
-        <Input
-          label={t("positionDetail.captureVariableKey") as string}
-          value={captureVariableKey}
-          onChange={(e) => setCaptureVariableKey(e.target.value)}
-        />
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-slate-700">{t("positionDetail.captureVariableKey")}</span>
+          <select
+            aria-label={t("positionDetail.captureVariableKey") as string}
+            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            value={captureVariableKey}
+            onChange={(e) => setCaptureVariableKey(e.target.value)}
+          >
+            <option value="">—</option>
+            {variables.map((v) => (
+              <option key={v.id} value={v.key}>
+                {v.key}
+              </option>
+            ))}
+          </select>
+          {variables.length === 0 && <p className="text-xs text-slate-400">{t("positionDetail.noVariablesYet")}</p>}
+        </div>
       )}
 
       <label className="flex items-center gap-1.5 text-sm text-slate-700">
@@ -366,10 +387,65 @@ function AddFlowForm({ botProjectId, isFirstFlow }: { botProjectId: string; isFi
   );
 }
 
+function VariablesSection({ botProjectId, variables }: { botProjectId: string; variables: ProjectVariable[] }) {
+  const { t } = useTranslation();
+  const { show } = useToast();
+  const addVariable = useAddVariable(botProjectId);
+  const [key, setKey] = useState("");
+  const [description, setDescription] = useState("");
+
+  const onSubmit = async () => {
+    if (!key.trim()) return;
+    try {
+      await addVariable.mutateAsync({ key: key.trim(), description: description.trim() || undefined });
+      setKey("");
+      setDescription("");
+      show(t("positionDetail.variableAdded") as string, "success");
+    } catch (error) {
+      show(toApiError(error).title, "error");
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("positionDetail.variables")}</CardTitle>
+      </CardHeader>
+      <p className="text-sm text-slate-500">{t("positionDetail.variablesHint")}</p>
+
+      {variables.length > 0 ? (
+        <ul className="flex flex-col gap-1">
+          {variables.map((v) => (
+            <li key={v.id} className="text-sm text-slate-700">
+              <span className="font-medium text-slate-900">{v.key}</span>
+              {v.description ? ` — ${v.description}` : ""}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-slate-400">{t("positionDetail.noVariablesYet")}</p>
+      )}
+
+      <div className="mt-2 flex items-end gap-2 border-t border-slate-100 pt-3">
+        <Input label={t("positionDetail.variableKey") as string} value={key} onChange={(e) => setKey(e.target.value)} />
+        <Input
+          label={t("positionDetail.description") as string}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <Button onClick={onSubmit} disabled={addVariable.isPending || !key.trim()}>
+          {t("common.add")}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 export function BotFlowEditorPage() {
   const { t } = useTranslation();
   const { positionId, botProjectId } = useParams<{ positionId: string; botProjectId: string }>();
   const { data: flows, isLoading } = useFlowsForBotProject(botProjectId);
+  const { data: variables } = useVariablesForProject(botProjectId);
 
   return (
     <div className="flex flex-col gap-4">
@@ -380,6 +456,8 @@ export function BotFlowEditorPage() {
         <h1 className="text-xl font-semibold text-slate-900">{t("positionDetail.botScript")}</h1>
         <p className="text-sm text-slate-500">{t("positionDetail.botScriptHint")}</p>
       </div>
+
+      {botProjectId && <VariablesSection botProjectId={botProjectId} variables={variables ?? []} />}
 
       {isLoading ? (
         <p className="text-sm text-slate-500">{t("common.loading")}</p>
@@ -407,7 +485,7 @@ export function BotFlowEditorPage() {
               <p className="text-sm text-slate-400">{t("positionDetail.noBotStepsYet")}</p>
             )}
 
-            {botProjectId && <AddStepForm flow={flow} botProjectId={botProjectId} />}
+            {botProjectId && <AddStepForm flow={flow} botProjectId={botProjectId} variables={variables ?? []} />}
           </Card>
         ))
       )}

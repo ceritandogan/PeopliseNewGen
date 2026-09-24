@@ -46,4 +46,17 @@ public class BotProjectTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("BotProject.InvalidRetentionPeriod");
     }
+
+    [Fact]
+    public void AddVariable_returns_the_created_variable_and_it_is_findable_by_id_and_key()
+    {
+        var project = BotProject.Create("Backend Screening Bot", Guid.NewGuid(), retentionPeriodDays: 90).Value;
+
+        var variable = project.AddVariable("noticePeriodWeeks", "Candidate's stated notice period, in weeks.");
+
+        project.Variables.Should().ContainSingle(v => v.Id == variable.Id);
+        project.FindVariable(variable.Id).Should().BeSameAs(variable);
+        project.FindVariableByKey("noticePeriodWeeks").Should().BeSameAs(variable);
+        project.FindVariableByKey("unknownKey").Should().BeNull();
+    }
 }

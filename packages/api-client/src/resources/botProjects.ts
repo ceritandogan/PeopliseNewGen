@@ -1,5 +1,12 @@
 import { httpClient } from "../http";
-import type { AddBotStepRequest, AddBotStepRouteRequest, BotFlow, BotProjectSummary, CreateBotProjectRequest } from "../types";
+import type {
+  AddBotStepRequest,
+  AddBotStepRouteRequest,
+  BotFlow,
+  BotProjectSummary,
+  CreateBotProjectRequest,
+  ProjectVariable,
+} from "../types";
 
 export async function createBotProject(request: CreateBotProjectRequest): Promise<string> {
   const { data } = await httpClient.post<string>("/api/bot-projects", request);
@@ -41,4 +48,14 @@ export async function addBotStepRoute(
 
 export async function removeBotStepRoute(botProjectId: string, flowId: string, stepId: string, routeId: string): Promise<void> {
   await httpClient.delete(`/api/bot-projects/${botProjectId}/flows/${flowId}/steps/${stepId}/routes/${routeId}`);
+}
+
+export async function getVariablesForProject(botProjectId: string): Promise<ProjectVariable[]> {
+  const { data } = await httpClient.get<ProjectVariable[]>(`/api/bot-projects/${botProjectId}/variables`);
+  return data;
+}
+
+export async function addVariable(botProjectId: string, request: { key: string; description?: string }): Promise<string> {
+  const { data } = await httpClient.post<string>(`/api/bot-projects/${botProjectId}/variables`, request);
+  return data;
 }

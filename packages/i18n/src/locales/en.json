@@ -142,7 +142,12 @@
     "indicatorDescription": "Observable behavior",
     "indicatorAdded": "Indicator added.",
     "indicators": "Behavioral indicators",
-    "noIndicatorsYet": "No indicators yet."
+    "noIndicatorsYet": "No indicators yet.",
+    "variables": "Project variables",
+    "variablesHint": "Variables a WaitResponse step's answer can be captured into. Declare one here before it can be picked when adding a step.",
+    "variableKey": "Key",
+    "variableAdded": "Variable added.",
+    "noVariablesYet": "No variables declared yet."
   },
   "comparison": {
     "title": "Candidate comparison",

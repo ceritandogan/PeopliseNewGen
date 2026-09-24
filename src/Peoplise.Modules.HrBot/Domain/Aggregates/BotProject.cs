@@ -77,6 +77,14 @@ public sealed class BotProject : AggregateRoot<BotProjectId>, IHasTenant, IAudit
 
     public Flow? FindFlow(Guid flowId) => _flows.FirstOrDefault(f => f.Id == flowId);
 
-    public void AddVariable(string key, string? description) =>
-        _variables.Add(new ProjectVariable(Guid.NewGuid(), key, description));
+    public ProjectVariable AddVariable(string key, string? description)
+    {
+        var variable = new ProjectVariable(Guid.NewGuid(), key, description);
+        _variables.Add(variable);
+        return variable;
+    }
+
+    public ProjectVariable? FindVariable(Guid variableId) => _variables.FirstOrDefault(v => v.Id == variableId);
+
+    public ProjectVariable? FindVariableByKey(string key) => _variables.FirstOrDefault(v => v.Key == key);
 }

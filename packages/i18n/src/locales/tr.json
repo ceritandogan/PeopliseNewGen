@@ -142,7 +142,12 @@
     "indicatorDescription": "Gözlemlenebilir davranış",
     "indicatorAdded": "Gösterge eklendi.",
     "indicators": "Davranışsal göstergeler",
-    "noIndicatorsYet": "Henüz gösterge yok."
+    "noIndicatorsYet": "Henüz gösterge yok.",
+    "variables": "Proje değişkenleri",
+    "variablesHint": "Bir WaitResponse adımının yanıtının kaydedilebileceği değişkenler. Bir adım eklerken seçilebilmesi için önce burada tanımlayın.",
+    "variableKey": "Anahtar",
+    "variableAdded": "Değişken eklendi.",
+    "noVariablesYet": "Henüz değişken tanımlanmadı."
   },
   "comparison": {
     "title": "Aday karşılaştırma",
