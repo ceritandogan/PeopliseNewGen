@@ -1,5 +1,6 @@
 using Peoplise.Modules.HrBot.Domain.ValueObjects;
 using Peoplise.SharedKernel.Domain;
+using Peoplise.SharedKernel.Results;
 
 namespace Peoplise.Modules.HrBot.Domain.Entities;
 
@@ -62,4 +63,15 @@ public sealed class Step : BaseEntity<Guid>
     }
 
     public void AddRoute(StepRoute route) => _routes.Add(route);
+
+    /// <summary>Routes are the one piece of this authoring surface that's add+remove rather than add-only — a wrong keyword or target is otherwise unrecoverable without a direct DB fix.</summary>
+    public Result RemoveRoute(Guid routeId)
+    {
+        var route = _routes.FirstOrDefault(r => r.Id == routeId);
+        if (route is null)
+            return Result.Failure(Error.NotFound("Step.RouteNotFound", $"No route '{routeId}' was found on this step."));
+
+        _routes.Remove(route);
+        return Result.Success();
+    }
 }

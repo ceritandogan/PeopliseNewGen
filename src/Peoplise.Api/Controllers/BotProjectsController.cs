@@ -45,4 +45,67 @@ public sealed class BotProjectsController : ControllerBase
         var result = await _mediator.Send(new GetBotProjectsForPositionQuery(positionId), cancellationToken);
         return result.ToActionResult(this);
     }
+
+    [HttpGet("{botProjectId:guid}/flows")]
+    public async Task<IActionResult> GetFlows(Guid botProjectId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetFlowsForBotProjectQuery(botProjectId), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{botProjectId:guid}/flows")]
+    public async Task<IActionResult> AddFlow(Guid botProjectId, AddBotFlowRequest request, CancellationToken cancellationToken)
+    {
+        var command = new AddFlowCommand(botProjectId, request.Name, request.IsDefault);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{botProjectId:guid}/flows/{flowId:guid}/steps")]
+    public async Task<IActionResult> AddStep(Guid botProjectId, Guid flowId, AddBotStepRequest request, CancellationToken cancellationToken)
+    {
+        var command = new AddStepCommand(
+            botProjectId, flowId, request.Type, request.Content, request.Order,
+            request.QuickReplyOptions, request.CaptureVariableKey, request.IsFinalStep, request.IsScreenOut);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{botProjectId:guid}/flows/{flowId:guid}/steps/{stepId:guid}/routes")]
+    public async Task<IActionResult> AddStepRoute(
+        Guid botProjectId, Guid flowId, Guid stepId, AddBotStepRouteRequest request, CancellationToken cancellationToken)
+    {
+        var command = new AddStepRouteCommand(
+            botProjectId, flowId, stepId, request.ConditionType, request.Keywords, request.RouteType,
+            request.TargetFlowId, request.TargetStepId);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpDelete("{botProjectId:guid}/flows/{flowId:guid}/steps/{stepId:guid}/routes/{routeId:guid}")]
+    public async Task<IActionResult> RemoveStepRoute(
+        Guid botProjectId, Guid flowId, Guid stepId, Guid routeId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new RemoveStepRouteCommand(botProjectId, flowId, stepId, routeId), cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
+
+public sealed record AddBotFlowRequest(string Name, bool IsDefault);
+
+public sealed record AddBotStepRequest(
+    Peoplise.Modules.HrBot.Domain.ValueObjects.StepType Type,
+    string Content,
+    int Order,
+    IReadOnlyList<string>? QuickReplyOptions,
+    string? CaptureVariableKey,
+    bool IsFinalStep,
+    bool IsScreenOut);
+
+/// <summary>Target fields are validated by RouteType server-side — see AddStepRouteCommandValidator.</summary>
+public sealed record AddBotStepRouteRequest(
+    Peoplise.Modules.HrBot.Domain.ValueObjects.ConditionType ConditionType,
+    IReadOnlyList<string> Keywords,
+    Peoplise.Modules.HrBot.Domain.ValueObjects.StepRouteType RouteType,
+    Guid? TargetFlowId,
+    Guid? TargetStepId);

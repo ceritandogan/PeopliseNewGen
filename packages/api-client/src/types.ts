@@ -336,6 +336,59 @@ export interface CreateBotProjectRequest {
   retentionPeriodDays: number;
 }
 
+/** Mirrors HrBot's ConditionType enum — how a route's Keywords are matched against the candidate's response. */
+export type BotConditionType = "NoCondition" | "HasAnyKeywords" | "HasAllKeywords" | "DoesNotContainKeywords" | "HasOnlyKeyword";
+
+/** Mirrors HrBot's StepRouteType enum. NextStep targets a step in the same flow; SwitchFlow targets a step in a different flow (via targetFlowId); EndConversation needs neither. */
+export type BotStepRouteType = "NextStep" | "SwitchFlow" | "EndConversation";
+
+export interface BotStepRoute {
+  id: string;
+  conditionType: BotConditionType;
+  keywords: string[];
+  routeType: BotStepRouteType;
+  targetFlowId: string | null;
+  targetStepId: string | null;
+}
+
+export interface BotFlowStep {
+  id: string;
+  type: StepType;
+  content: string;
+  order: number;
+  quickReplyOptions: string[];
+  captureVariableKey: string | null;
+  isFinalStep: boolean;
+  isScreenOut: boolean;
+  routes: BotStepRoute[];
+}
+
+export interface BotFlow {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  steps: BotFlowStep[];
+}
+
+export interface AddBotStepRequest {
+  type: StepType;
+  content: string;
+  order: number;
+  quickReplyOptions?: string[] | null;
+  captureVariableKey?: string | null;
+  isFinalStep: boolean;
+  isScreenOut: boolean;
+}
+
+/** targetFlowId/targetStepId requirements depend on routeType — see AddStepRouteCommandValidator. */
+export interface AddBotStepRouteRequest {
+  conditionType: BotConditionType;
+  keywords: string[];
+  routeType: BotStepRouteType;
+  targetFlowId?: string | null;
+  targetStepId?: string | null;
+}
+
 /** Mirrors ATS's StageType enum. */
 export type StageType =
   | "InformationForm"

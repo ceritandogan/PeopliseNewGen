@@ -8,6 +8,7 @@ import { CandidatePipelinePage } from "./pages/CandidatePipelinePage";
 import { CandidateDetailPage } from "./pages/CandidateDetailPage";
 import { CandidateComparisonPage } from "./pages/CandidateComparisonPage";
 import { CaseFlowEditorPage } from "./pages/CaseFlowEditorPage";
+import { BotFlowEditorPage } from "./pages/BotFlowEditorPage";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { ForbiddenPage } from "./pages/ForbiddenPage";
@@ -33,6 +34,10 @@ export function App() {
           <Route
             path="positions/:positionId/case-bot-projects/:caseBotProjectId/flows"
             element={<CaseFlowEditorPage />}
+          />
+          <Route
+            path="positions/:positionId/bot-projects/:botProjectId/flows"
+            element={<BotFlowEditorPage />}
           />
           <Route path="candidates/:candidateProcessId" element={<CandidateDetailPage />} />
         </Route>

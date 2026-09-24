@@ -227,11 +227,16 @@ function BotProjectsCard({ positionId }: { positionId: string }) {
       ) : data && data.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {data.map((project: BotProjectSummary) => (
-            <li key={project.id} className="flex items-center justify-between text-sm">
-              <span className="font-medium text-slate-900">{project.name}</span>
-              <span className="text-slate-500">
-                {t("positionDetail.retentionPeriodDays")}: {project.retentionPeriodDays}
-              </span>
+            <li key={project.id} className="flex flex-col gap-1 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-slate-900">{project.name}</span>
+                <span className="text-slate-500">
+                  {t("positionDetail.retentionPeriodDays")}: {project.retentionPeriodDays}
+                </span>
+              </div>
+              <Link to={`/positions/${positionId}/bot-projects/${project.id}/flows`} className="text-brand-600 hover:underline">
+                {t("positionDetail.editScript")}
+              </Link>
             </li>
           ))}
         </ul>
