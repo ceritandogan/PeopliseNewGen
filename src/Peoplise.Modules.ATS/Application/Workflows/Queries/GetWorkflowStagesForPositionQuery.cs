@@ -16,7 +16,9 @@ public sealed record GetWorkflowStagesForPositionQuery(Guid PositionId) : IReque
 
 public sealed record WorkflowStagesDto(Guid WorkflowDefinitionId, IReadOnlyList<WorkflowStageDto> Stages);
 
-public sealed record WorkflowStageDto(Guid Id, string Name, StageType Type, int Order);
+public sealed record WorkflowStageDto(Guid Id, string Name, StageType Type, int Order, IReadOnlyList<StageRuleDto> Rules);
+
+public sealed record StageRuleDto(Guid Id, StageRuleType Type, decimal? Threshold, int? DelayDays);
 
 public sealed class GetWorkflowStagesForPositionQueryHandler
     : IRequestHandler<GetWorkflowStagesForPositionQuery, Result<WorkflowStagesDto>>
@@ -47,7 +49,11 @@ public sealed class GetWorkflowStagesForPositionQueryHandler
                 "WorkflowDefinition.NotFound", $"No workflow definition '{position.WorkflowDefinitionId.Value}' was found."));
         }
 
-        var stages = workflow.Stages.Select(s => new WorkflowStageDto(s.Id, s.Name, s.Type, s.Order)).ToList();
+        var stages = workflow.Stages
+            .Select(s => new WorkflowStageDto(
+                s.Id, s.Name, s.Type, s.Order,
+                s.Rules.Select(r => new StageRuleDto(r.Id, r.Type, r.Threshold, r.DelayDays)).ToList()))
+            .ToList();
         return Result.Success(new WorkflowStagesDto(workflow.Id.Value, stages));
     }
 }

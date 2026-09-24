@@ -59,7 +59,17 @@
     "noStagesYet": "No stages yet.",
     "workMode_office": "Office",
     "workMode_remote": "Remote",
-    "workMode_hybrid": "Hybrid"
+    "workMode_hybrid": "Hybrid",
+    "rules": "Rules",
+    "ruleType": "Rule type",
+    "removeRule": "Remove rule",
+    "ruleType_AdvanceIfScoreAtLeast": "Advance if score ≥",
+    "ruleType_EliminateIfScoreBelow": "Eliminate if score <",
+    "ruleType_ActivateAfterDelay": "Activate after",
+    "ruleThresholdDetail": "{{threshold}}",
+    "ruleDelayDetail": "{{days}}d",
+    "thresholdPlaceholder": "0-100",
+    "delayDaysPlaceholder": "Days"
   },
   "positionDetail": {
     "caseBotProjects": "Video interview projects",

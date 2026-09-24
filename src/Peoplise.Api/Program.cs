@@ -90,6 +90,9 @@ builder.Services.AddVideoInterviewModule();
 // and HrBot's Conversation — see ADR 0003.
 builder.Services.AddHostedService<RetentionExpiryBackgroundService>();
 
+// The trigger ActivateAfterDelay stage rules need — see the service's own remarks.
+builder.Services.AddHostedService<WorkflowStageDelaySweepBackgroundService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Default", policy =>

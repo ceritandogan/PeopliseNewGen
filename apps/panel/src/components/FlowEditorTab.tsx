@@ -15,8 +15,15 @@ import {
 import { SortableContext, arrayMove, horizontalListSortingStrategy, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button, Card, Input, Modal, useToast } from "@peoplise/ui";
-import { toApiError, type StageType, type WorkflowStage } from "@peoplise/api-client";
-import { useAddWorkflowStage, useRemoveWorkflowStage, useReorderWorkflowStages, useWorkflowStages } from "../hooks/useWorkflowStages";
+import { toApiError, type StageRuleType, type StageType, type WorkflowStage } from "@peoplise/api-client";
+import {
+  useAddStageRule,
+  useAddWorkflowStage,
+  useRemoveStageRule,
+  useRemoveWorkflowStage,
+  useReorderWorkflowStages,
+  useWorkflowStages,
+} from "../hooks/useWorkflowStages";
 
 const STAGE_TYPES: StageType[] = [
   "InformationForm",
@@ -34,13 +41,110 @@ const addStageSchema = z.object({
 });
 type AddStageForm = z.infer<typeof addStageSchema>;
 
-function SortableStageCard({ stage, onRemove }: { stage: WorkflowStage; onRemove: (stageId: string) => void }) {
+const STAGE_RULE_TYPES: StageRuleType[] = ["AdvanceIfScoreAtLeast", "EliminateIfScoreBelow", "ActivateAfterDelay"];
+
+/** ActivateAfterDelay needs delayDays; the other two need a 0-100 threshold — see AddStageRuleCommandValidator's own remarks. */
+function ruleUsesDelay(type: StageRuleType) {
+  return type === "ActivateAfterDelay";
+}
+
+function StageRuleRow({
+  rule,
+  onRemove,
+}: {
+  rule: WorkflowStage["rules"][number];
+  onRemove: (ruleId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const detail = ruleUsesDelay(rule.type)
+    ? t("positions.ruleDelayDetail", { days: rule.delayDays })
+    : t("positions.ruleThresholdDetail", { threshold: rule.threshold });
+
+  return (
+    <li className="flex items-center justify-between gap-1 text-xs text-slate-600">
+      <span className="truncate">
+        {t(`positions.ruleType_${rule.type}`)} {detail}
+      </span>
+      <button type="button" onClick={() => onRemove(rule.id)} className="shrink-0 text-slate-400 hover:text-red-600" aria-label={t("positions.removeRule") as string}>
+        ×
+      </button>
+    </li>
+  );
+}
+
+function AddStageRuleForm({ onAdd }: { onAdd: (type: StageRuleType, threshold: number | null, delayDays: number | null) => Promise<void> }) {
+  const { t } = useTranslation();
+  const [type, setType] = useState<StageRuleType>("AdvanceIfScoreAtLeast");
+  const [value, setValue] = useState("");
+  const [isSubmitting, setSubmitting] = useState(false);
+  const usesDelay = ruleUsesDelay(type);
+
+  const onSubmit = async () => {
+    const parsed = Number(value);
+    if (!value || Number.isNaN(parsed)) return;
+
+    setSubmitting(true);
+    try {
+      await onAdd(type, usesDelay ? null : parsed, usesDelay ? parsed : null);
+      setValue("");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1 pt-1">
+      <select
+        aria-label={t("positions.ruleType") as string}
+        className="h-7 rounded border border-slate-300 bg-white px-1.5 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        value={type}
+        onChange={(e) => {
+          setType(e.target.value as StageRuleType);
+          setValue("");
+        }}
+      >
+        {STAGE_RULE_TYPES.map((ruleType) => (
+          <option key={ruleType} value={ruleType}>
+            {t(`positions.ruleType_${ruleType}`)}
+          </option>
+        ))}
+      </select>
+      <div className="flex gap-1">
+        <input
+          type="number"
+          min={usesDelay ? 1 : 0}
+          max={usesDelay ? undefined : 100}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={usesDelay ? (t("positions.delayDaysPlaceholder") as string) : (t("positions.thresholdPlaceholder") as string)}
+          className="h-7 w-full rounded border border-slate-300 bg-white px-1.5 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        />
+        <Button size="sm" className="h-7 shrink-0 px-2 text-xs" disabled={isSubmitting} onClick={onSubmit}>
+          {t("common.add")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SortableStageCard({
+  stage,
+  onRemove,
+  onAddRule,
+  onRemoveRule,
+}: {
+  stage: WorkflowStage;
+  onRemove: (stageId: string) => void;
+  onAddRule: (stageId: string, type: StageRuleType, threshold: number | null, delayDays: number | null) => Promise<void>;
+  onRemoveRule: (stageId: string, ruleId: string) => void;
+}) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stage.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="w-48 shrink-0 select-none">
+      <Card className="w-56 shrink-0 select-none">
         <div className="mb-1 flex items-center justify-between">
           <button
             type="button"
@@ -57,6 +161,18 @@ function SortableStageCard({ stage, onRemove }: { stage: WorkflowStage; onRemove
         </div>
         <p className="text-sm font-medium text-slate-900">{stage.name}</p>
         <p className="text-xs text-slate-500">{stage.type}</p>
+
+        <div className="mt-2 border-t border-slate-100 pt-2">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{t("positions.rules")}</p>
+          {stage.rules.length > 0 ? (
+            <ul className="mt-1 flex flex-col gap-0.5">
+              {stage.rules.map((rule) => (
+                <StageRuleRow key={rule.id} rule={rule} onRemove={(ruleId) => onRemoveRule(stage.id, ruleId)} />
+              ))}
+            </ul>
+          ) : null}
+          <AddStageRuleForm onAdd={(type, threshold, delayDays) => onAddRule(stage.id, type, threshold, delayDays)} />
+        </div>
       </Card>
     </div>
   );
@@ -70,6 +186,8 @@ export function FlowEditorTab({ positionId }: { positionId: string }) {
   const addStage = useAddWorkflowStage(positionId, workflowDefinitionId);
   const reorderStages = useReorderWorkflowStages(positionId, workflowDefinitionId);
   const removeStage = useRemoveWorkflowStage(positionId, workflowDefinitionId);
+  const addStageRule = useAddStageRule(positionId, workflowDefinitionId);
+  const removeStageRule = useRemoveStageRule(positionId, workflowDefinitionId);
   const [isAddOpen, setAddOpen] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
@@ -97,6 +215,22 @@ export function FlowEditorTab({ positionId }: { positionId: string }) {
   const onRemoveStage = async (stageId: string) => {
     try {
       await removeStage.mutateAsync(stageId);
+    } catch (error) {
+      show(toApiError(error).title, "error");
+    }
+  };
+
+  const onAddRule = async (stageId: string, type: StageRuleType, threshold: number | null, delayDays: number | null) => {
+    try {
+      await addStageRule.mutateAsync({ stageId, type, threshold, delayDays });
+    } catch (error) {
+      show(toApiError(error).title, "error");
+    }
+  };
+
+  const onRemoveRule = async (stageId: string, ruleId: string) => {
+    try {
+      await removeStageRule.mutateAsync({ stageId, ruleId });
     } catch (error) {
       show(toApiError(error).title, "error");
     }
@@ -130,7 +264,13 @@ export function FlowEditorTab({ positionId }: { positionId: string }) {
           <SortableContext items={stages.map((s) => s.id)} strategy={horizontalListSortingStrategy}>
             <div className="flex gap-3 overflow-x-auto pb-2" aria-label="Workflow stages">
               {stages.map((stage) => (
-                <SortableStageCard key={stage.id} stage={stage} onRemove={onRemoveStage} />
+                <SortableStageCard
+                  key={stage.id}
+                  stage={stage}
+                  onRemove={onRemoveStage}
+                  onAddRule={onAddRule}
+                  onRemoveRule={onRemoveRule}
+                />
               ))}
             </div>
           </SortableContext>

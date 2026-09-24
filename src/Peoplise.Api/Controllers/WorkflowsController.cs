@@ -55,9 +55,27 @@ public sealed class WorkflowsController : ControllerBase
         var result = await _mediator.Send(new RemoveWorkflowStageCommand(workflowDefinitionId, stageId), cancellationToken);
         return result.ToActionResult(this);
     }
+
+    [HttpPost("{workflowDefinitionId:guid}/stages/{stageId:guid}/rules")]
+    public async Task<IActionResult> AddRule(Guid workflowDefinitionId, Guid stageId, AddStageRuleRequest request, CancellationToken cancellationToken)
+    {
+        var command = new AddStageRuleCommand(workflowDefinitionId, stageId, request.Type, request.Threshold, request.DelayDays);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpDelete("{workflowDefinitionId:guid}/stages/{stageId:guid}/rules/{ruleId:guid}")]
+    public async Task<IActionResult> RemoveRule(Guid workflowDefinitionId, Guid stageId, Guid ruleId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new RemoveStageRuleCommand(workflowDefinitionId, stageId, ruleId), cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
 
 /// <summary>Order is computed client-side (append to the end, from the stage list the UI already has loaded) rather than asked of the user — see RequestCodeReviewRequest's StepId for the same reasoning applied elsewhere.</summary>
 public sealed record AddStageRequest(string Name, StageType Type, int Order);
 
 public sealed record ReorderStagesRequest(IReadOnlyList<Guid> OrderedStageIds);
+
+/// <summary>Threshold is required for AdvanceIfScoreAtLeast/EliminateIfScoreBelow, DelayDays for ActivateAfterDelay — see AddStageRuleCommandValidator.</summary>
+public sealed record AddStageRuleRequest(StageRuleType Type, decimal? Threshold, int? DelayDays);

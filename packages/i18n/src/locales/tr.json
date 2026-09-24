@@ -59,7 +59,17 @@
     "noStagesYet": "Henüz aşama yok.",
     "workMode_office": "Ofis",
     "workMode_remote": "Uzaktan",
-    "workMode_hybrid": "Hibrit"
+    "workMode_hybrid": "Hibrit",
+    "rules": "Kurallar",
+    "ruleType": "Kural tipi",
+    "removeRule": "Kuralı kaldır",
+    "ruleType_AdvanceIfScoreAtLeast": "Puan ≥ ise ilerlet",
+    "ruleType_EliminateIfScoreBelow": "Puan < ise ele",
+    "ruleType_ActivateAfterDelay": "Şu kadar sonra aktif et",
+    "ruleThresholdDetail": "{{threshold}}",
+    "ruleDelayDetail": "{{days}} gün",
+    "thresholdPlaceholder": "0-100",
+    "delayDaysPlaceholder": "Gün"
   },
   "positionDetail": {
     "caseBotProjects": "Video mülakat projeleri",

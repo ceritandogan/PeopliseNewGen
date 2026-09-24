@@ -1,5 +1,6 @@
 using Peoplise.Modules.ATS.Domain.ValueObjects;
 using Peoplise.SharedKernel.Domain;
+using Peoplise.SharedKernel.Results;
 
 namespace Peoplise.Modules.ATS.Domain.Entities;
 
@@ -35,6 +36,16 @@ public sealed class Stage : BaseEntity<Guid>
     }
 
     public void AddRule(StageRule rule) => _rules.Add(rule);
+
+    public Result RemoveRule(Guid ruleId)
+    {
+        var rule = _rules.FirstOrDefault(r => r.Id == ruleId);
+        if (rule is null)
+            return Result.Failure(Error.NotFound("Stage.RuleNotFound", $"No rule '{ruleId}' was found on this stage."));
+
+        _rules.Remove(rule);
+        return Result.Success();
+    }
 
     /// <summary>Called only by <c>WorkflowDefinition.ReorderStages</c>, which owns the invariant that every stage in the workflow ends up with a distinct order.</summary>
     internal void SetOrder(int order)

@@ -320,11 +320,23 @@ export type StageType =
   | "ReviewerApproval"
   | "OfferStage";
 
+/** Mirrors ATS's StageRuleType enum. */
+export type StageRuleType = "AdvanceIfScoreAtLeast" | "EliminateIfScoreBelow" | "ActivateAfterDelay";
+
+/** Threshold is set for AdvanceIfScoreAtLeast/EliminateIfScoreBelow, delayDays for ActivateAfterDelay. */
+export interface StageRule {
+  id: string;
+  type: StageRuleType;
+  threshold: number | null;
+  delayDays: number | null;
+}
+
 export interface WorkflowStage {
   id: string;
   name: string;
   type: StageType;
   order: number;
+  rules: StageRule[];
 }
 
 export interface WorkflowStagesResult {
