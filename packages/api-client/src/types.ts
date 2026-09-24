@@ -298,6 +298,32 @@ export interface CreateCaseBotProjectRequest {
   retentionPeriodDays: number;
 }
 
+export interface CaseFlowStep {
+  id: string;
+  type: CaseStepType;
+  content: string;
+  order: number;
+  preparationTimeSeconds: number | null;
+  recordingTimeSeconds: number | null;
+  relatedCompetencyIds: string[];
+}
+
+export interface CaseFlow {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  steps: CaseFlowStep[];
+}
+
+export interface AddFlowStepRequest {
+  type: CaseStepType;
+  content: string;
+  order: number;
+  preparationTimeSeconds?: number | null;
+  recordingTimeSeconds?: number | null;
+  relatedCompetencyIds?: string[] | null;
+}
+
 export interface BotProjectSummary {
   id: string;
   name: string;

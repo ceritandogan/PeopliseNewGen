@@ -24,8 +24,23 @@ public static class DemoDataSeeder
 {
     public static async Task SeedAsync(AppDbContext context, CancellationToken cancellationToken = default)
     {
-        var alreadySeeded = await context.Set<BotProject>().IgnoreQueryFilters().AnyAsync(cancellationToken);
-        if (alreadySeeded) return;
+        var hasBotProject = await context.Set<BotProject>().IgnoreQueryFilters().AnyAsync(cancellationToken);
+        var hasCaseBotProject = await context.Set<CaseBotProject>().IgnoreQueryFilters().AnyAsync(cancellationToken);
+
+        if (hasBotProject && hasCaseBotProject) return;
+
+        if (hasBotProject != hasCaseBotProject)
+        {
+            // Both aggregates are seeded together below in one SaveChangesAsync, so this
+            // can only happen against a local database seeded by an older version of
+            // this method that predates CaseBotProject seeding — gating on BotProject
+            // alone (the original check) would silently skip CaseBotProject/CaseFlows
+            // forever on such a database. Reseeding here instead of bailing would insert
+            // a second demo Position rather than repairing the gap, so fail loudly.
+            throw new InvalidOperationException(
+                "Demo data is partially seeded (BotProject and CaseBotProject existence disagree) — " +
+                "reset the local Postgres volume (docker compose down -v) and restart.");
+        }
 
         using var _ = AmbientTenantOverride.Begin(TenantId.From(DatabaseSeeder.DemoTenantId));
 

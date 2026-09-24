@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { casesApi } from "@peoplise/api-client";
+import { casesApi, type AddFlowStepRequest } from "@peoplise/api-client";
+
+function flowsQueryKey(caseBotProjectId: string | undefined) {
+  return ["case-bot-projects", caseBotProjectId, "flows"];
+}
 
 export function useCaseForCandidate(candidateId: string | undefined, positionId: string | undefined) {
   return useQuery({
@@ -57,5 +61,32 @@ export function useRequestAICodeReview(caseId: string | null | undefined) {
   return useMutation({
     mutationFn: (request: { question: string; candidateCode: string }) =>
       casesApi.requestAICodeReview(caseId!, { stepId: crypto.randomUUID(), ...request }),
+  });
+}
+
+export function useFlowsForProject(caseBotProjectId: string | undefined) {
+  return useQuery({
+    queryKey: flowsQueryKey(caseBotProjectId),
+    queryFn: () => casesApi.getFlowsForProject(caseBotProjectId!),
+    enabled: Boolean(caseBotProjectId),
+  });
+}
+
+export function useAddFlow(caseBotProjectId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: { name: string; isDefault: boolean }) => casesApi.addFlow(caseBotProjectId!, request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: flowsQueryKey(caseBotProjectId) }),
+  });
+}
+
+export function useAddFlowStep(caseBotProjectId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ flowId, ...request }: AddFlowStepRequest & { flowId: string }) =>
+      casesApi.addFlowStep(caseBotProjectId!, flowId, request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: flowsQueryKey(caseBotProjectId) }),
   });
 }

@@ -80,7 +80,21 @@
     "name": "Ad",
     "retakesAllowed": "İzin verilen tekrar çekim",
     "retentionPeriodDays": "Saklama süresi (gün)",
-    "viewComparison": "Karşılaştırmayı görüntüle"
+    "viewComparison": "Karşılaştırmayı görüntüle",
+    "editQuestions": "Soruları düzenle",
+    "caseQuestions": "Mülakat soruları",
+    "caseQuestionsHint": "Sorular bir akış içinde sırayla sorulur. Adaylar mülakata başlayabilmek için projenin bir varsayılan akışı olması gerekir.",
+    "defaultFlow": "Varsayılan",
+    "noStepsYet": "Henüz soru yok.",
+    "stepType": "Soru tipi",
+    "stepContent": "Soru / mesaj",
+    "preparationTimeSeconds": "Hazırlanma süresi (saniye)",
+    "recordingTimeSeconds": "Kayıt süresi (saniye)",
+    "relatedCompetencies": "İlgili yetkinlikler",
+    "addStep": "Soru ekle",
+    "stepAdded": "Soru eklendi.",
+    "addFlow": "Akış ekle",
+    "flowAdded": "Akış eklendi."
   },
   "comparison": {
     "title": "Aday karşılaştırma",

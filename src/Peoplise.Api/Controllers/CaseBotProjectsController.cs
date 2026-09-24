@@ -69,6 +69,41 @@ public sealed class CaseBotProjectsController : ControllerBase
         var result = await _mediator.Send(new GetCompetenciesForProjectQuery(caseBotProjectId), cancellationToken);
         return result.ToActionResult(this);
     }
+
+    [HttpGet("{caseBotProjectId:guid}/flows")]
+    public async Task<IActionResult> GetFlows(Guid caseBotProjectId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetFlowsForProjectQuery(caseBotProjectId), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{caseBotProjectId:guid}/flows")]
+    public async Task<IActionResult> AddFlow(Guid caseBotProjectId, AddFlowRequest request, CancellationToken cancellationToken)
+    {
+        var command = new AddFlowCommand(caseBotProjectId, request.Name, request.IsDefault);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{caseBotProjectId:guid}/flows/{flowId:guid}/steps")]
+    public async Task<IActionResult> AddFlowStep(Guid caseBotProjectId, Guid flowId, AddFlowStepRequest request, CancellationToken cancellationToken)
+    {
+        var command = new AddFlowStepCommand(
+            caseBotProjectId, flowId, request.Type, request.Content, request.Order,
+            request.PreparationTimeSeconds, request.RecordingTimeSeconds, request.RelatedCompetencyIds);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
 
 public sealed record AddCompetencyRequest(string Name, string? Description);
+
+public sealed record AddFlowRequest(string Name, bool IsDefault);
+
+public sealed record AddFlowStepRequest(
+    Peoplise.Modules.VideoInterview.Domain.ValueObjects.StepType Type,
+    string Content,
+    int Order,
+    int? PreparationTimeSeconds,
+    int? RecordingTimeSeconds,
+    IReadOnlyList<Guid>? RelatedCompetencyIds);

@@ -30,7 +30,7 @@ export function useAddCandidateNote(candidateProcessId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: { authorId: string; text: string; isPrivate: boolean }) =>
+    mutationFn: (request: { text: string; isPrivate: boolean }) =>
       candidatesApi.addCandidateNote(candidateProcessId, request),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["candidates", candidateProcessId] }),
   });

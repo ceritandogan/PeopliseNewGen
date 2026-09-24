@@ -80,7 +80,21 @@
     "name": "Name",
     "retakesAllowed": "Retakes allowed",
     "retentionPeriodDays": "Retention period (days)",
-    "viewComparison": "View comparison"
+    "viewComparison": "View comparison",
+    "editQuestions": "Edit questions",
+    "caseQuestions": "Interview questions",
+    "caseQuestionsHint": "Questions are asked in order within a flow. A project needs one default flow before candidates can start their interview.",
+    "defaultFlow": "Default",
+    "noStepsYet": "No questions yet.",
+    "stepType": "Question type",
+    "stepContent": "Question / message",
+    "preparationTimeSeconds": "Preparation time (seconds)",
+    "recordingTimeSeconds": "Recording time (seconds)",
+    "relatedCompetencies": "Related competencies",
+    "addStep": "Add question",
+    "stepAdded": "Question added.",
+    "addFlow": "Add flow",
+    "flowAdded": "Flow added."
   },
   "comparison": {
     "title": "Candidate comparison",

@@ -71,10 +71,21 @@ public sealed class CandidatesController : ControllerBase
         return result.ToActionResult(this);
     }
 
+    /// <summary>
+    /// The author is whoever the access token's <c>email</c> claim says is making the
+    /// call — never taken from the request body — same "never trust a client-supplied
+    /// identity" reasoning as SubmitEvaluation, but reads the email claim rather than
+    /// sub since AuthorId is shown to other reviewers as a human-readable label, not
+    /// used as a stable id. No role check: same reasoning as the rest of this controller.
+    /// </summary>
     [HttpPost("{candidateProcessId:guid}/notes")]
     public async Task<IActionResult> AddNote(Guid candidateProcessId, AddNoteRequest request, CancellationToken cancellationToken)
     {
-        var command = new AddCandidateNoteCommand(candidateProcessId, request.AuthorId, request.Text, request.IsPrivate);
+        var authorId = User.FindFirstValue(Claims.Email);
+        if (string.IsNullOrEmpty(authorId))
+            return Unauthorized();
+
+        var command = new AddCandidateNoteCommand(candidateProcessId, authorId, request.Text, request.IsPrivate);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult(this);
     }
@@ -87,7 +98,8 @@ public sealed class CandidatesController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    public sealed record AddNoteRequest(string AuthorId, string Text, bool IsPrivate);
+    /// <summary>No AuthorId here — deliberately: it's derived server-side from the caller's access token. See AddNote.</summary>
+    public sealed record AddNoteRequest(string Text, bool IsPrivate);
 
     /// <summary>No EvaluatorId here — deliberately: it's derived server-side from the caller's access token, never accepted from the client. See SubmitEvaluation.</summary>
     public sealed record SubmitEvaluationRequest(decimal Score, string? Comments);

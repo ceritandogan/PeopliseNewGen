@@ -135,12 +135,20 @@ function CaseBotProjectsCard({ positionId }: { positionId: string }) {
                   {project.retentionPeriodDays}
                 </span>
               </div>
-              <Link
-                to={`/positions/${positionId}/case-bot-projects/${project.id}/comparison`}
-                className="text-brand-600 hover:underline"
-              >
-                {t("positionDetail.viewComparison")}
-              </Link>
+              <div className="flex gap-3">
+                <Link
+                  to={`/positions/${positionId}/case-bot-projects/${project.id}/flows`}
+                  className="text-brand-600 hover:underline"
+                >
+                  {t("positionDetail.editQuestions")}
+                </Link>
+                <Link
+                  to={`/positions/${positionId}/case-bot-projects/${project.id}/comparison`}
+                  className="text-brand-600 hover:underline"
+                >
+                  {t("positionDetail.viewComparison")}
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

@@ -1,7 +1,9 @@
 import { httpClient } from "../http";
 import type {
+  AddFlowStepRequest,
   CandidateComparisonItem,
   CaseBotProjectSummary,
+  CaseFlow,
   CaseForCandidateResponse,
   CaseReport,
   CodeReviewResult,
@@ -94,5 +96,20 @@ export async function getCaseBotProjectsForPosition(positionId: string): Promise
 /** Column headers (id+name) for the candidate comparison table — independent of any one case. */
 export async function getCompetenciesForProject(caseBotProjectId: string): Promise<Competency[]> {
   const { data } = await httpClient.get<Competency[]>(`/api/case-bot-projects/${caseBotProjectId}/competencies`);
+  return data;
+}
+
+export async function getFlowsForProject(caseBotProjectId: string): Promise<CaseFlow[]> {
+  const { data } = await httpClient.get<CaseFlow[]>(`/api/case-bot-projects/${caseBotProjectId}/flows`);
+  return data;
+}
+
+export async function addFlow(caseBotProjectId: string, request: { name: string; isDefault: boolean }): Promise<string> {
+  const { data } = await httpClient.post<string>(`/api/case-bot-projects/${caseBotProjectId}/flows`, request);
+  return data;
+}
+
+export async function addFlowStep(caseBotProjectId: string, flowId: string, request: AddFlowStepRequest): Promise<string> {
+  const { data } = await httpClient.post<string>(`/api/case-bot-projects/${caseBotProjectId}/flows/${flowId}/steps`, request);
   return data;
 }

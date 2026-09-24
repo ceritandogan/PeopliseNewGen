@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Card, CardHeader, CardTitle, Badge, Button, Input, useAuth, useToast } from "@peoplise/ui";
+import { Card, CardHeader, CardTitle, Badge, Button, Input, useToast } from "@peoplise/ui";
 import { toApiError } from "@peoplise/api-client";
 import { CaseReportCard } from "../components/CaseReportCard";
 import { ConversationTranscriptCard } from "../components/ConversationTranscriptCard";
@@ -17,7 +17,6 @@ export function CandidateDetailPage() {
   const addNote = useAddCandidateNote(candidateProcessId ?? "");
   const submitEvaluation = useSubmitEvaluation(candidateProcessId ?? "");
   const stages = useWorkflowStages(data?.positionId);
-  const { session } = useAuth();
   const { show } = useToast();
   const [noteText, setNoteText] = useState("");
   const [evaluationScore, setEvaluationScore] = useState("");
@@ -31,7 +30,7 @@ export function CandidateDetailPage() {
   const submitNote = async () => {
     if (!noteText.trim()) return;
     try {
-      await addNote.mutateAsync({ authorId: session?.user.email ?? "unknown", text: noteText, isPrivate: false });
+      await addNote.mutateAsync({ text: noteText, isPrivate: false });
       setNoteText("");
       show("Note added.", "success");
     } catch (error) {
