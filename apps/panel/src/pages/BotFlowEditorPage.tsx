@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Button, Card, CardHeader, CardTitle, Input, useToast } from "@peoplise/ui";
+import { Button, Card, CardHeader, CardTitle, Input, Select, useToast } from "@peoplise/ui";
 import {
   toApiError,
   type BotConditionType,
@@ -94,9 +94,9 @@ function AddStepRouteForm({
   return (
     <div className="flex flex-col gap-1.5 rounded-md bg-slate-50 p-2">
       <div className="flex flex-wrap gap-1.5">
-        <select
+        <Select
+          size="sm"
           aria-label={t("positionDetail.conditionType") as string}
-          className="h-8 rounded border border-slate-300 bg-white px-1.5 text-xs text-slate-900"
           value={conditionType}
           onChange={(e) => setConditionType(e.target.value as BotConditionType)}
         >
@@ -105,11 +105,11 @@ function AddStepRouteForm({
               {t(`positionDetail.condition_${c}`)}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <select
+        <Select
+          size="sm"
           aria-label={t("positionDetail.routeType") as string}
-          className="h-8 rounded border border-slate-300 bg-white px-1.5 text-xs text-slate-900"
           value={routeType}
           onChange={(e) => {
             setRouteType(e.target.value as BotStepRouteType);
@@ -122,7 +122,7 @@ function AddStepRouteForm({
               {t(`positionDetail.routeTypeOption_${r}`)}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {needsKeywords && (
@@ -136,9 +136,9 @@ function AddStepRouteForm({
       )}
 
       {routeType === "SwitchFlow" && (
-        <select
+        <Select
+          size="sm"
           aria-label={t("positionDetail.targetFlow") as string}
-          className="h-8 rounded border border-slate-300 bg-white px-1.5 text-xs text-slate-900"
           value={targetFlowId}
           onChange={(e) => {
             setTargetFlowId(e.target.value);
@@ -151,13 +151,13 @@ function AddStepRouteForm({
               {f.name}
             </option>
           ))}
-        </select>
+        </Select>
       )}
 
       {routeType !== "EndConversation" && (
-        <select
+        <Select
+          size="sm"
           aria-label={t("positionDetail.targetStep") as string}
-          className="h-8 rounded border border-slate-300 bg-white px-1.5 text-xs text-slate-900"
           value={targetStepId}
           onChange={(e) => setTargetStepId(e.target.value)}
           disabled={routeType === "SwitchFlow" && !targetFlowId}
@@ -168,7 +168,7 @@ function AddStepRouteForm({
               {s.order}. {s.content.slice(0, 40)}
             </option>
           ))}
-        </select>
+        </Select>
       )}
 
       <Button size="sm" className="h-7 w-fit px-2 text-xs" disabled={addRoute.isPending} onClick={onSubmit}>
@@ -292,9 +292,8 @@ function AddStepForm({ flow, botProjectId, variables }: { flow: BotFlow; botProj
 
   return (
     <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
-      <select
+      <Select
         aria-label={t("positionDetail.botStepType") as string}
-        className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         value={type}
         onChange={(e) => setType(e.target.value as StepType)}
       >
@@ -303,7 +302,7 @@ function AddStepForm({ flow, botProjectId, variables }: { flow: BotFlow; botProj
             {stepType}
           </option>
         ))}
-      </select>
+      </Select>
 
       <Input label={t("positionDetail.botStepContent") as string} value={content} onChange={(e) => setContent(e.target.value)} />
 
@@ -318,10 +317,8 @@ function AddStepForm({ flow, botProjectId, variables }: { flow: BotFlow; botProj
 
       {type === "WaitResponse" && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-slate-700">{t("positionDetail.captureVariableKey")}</span>
-          <select
-            aria-label={t("positionDetail.captureVariableKey") as string}
-            className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          <Select
+            label={t("positionDetail.captureVariableKey") as string}
             value={captureVariableKey}
             onChange={(e) => setCaptureVariableKey(e.target.value)}
           >
@@ -331,7 +328,7 @@ function AddStepForm({ flow, botProjectId, variables }: { flow: BotFlow; botProj
                 {v.key}
               </option>
             ))}
-          </select>
+          </Select>
           {variables.length === 0 && <p className="text-xs text-slate-400">{t("positionDetail.noVariablesYet")}</p>}
         </div>
       )}

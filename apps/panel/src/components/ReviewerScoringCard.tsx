@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
-import { Button, Card, CardHeader, CardTitle, Input, useToast } from "@peoplise/ui";
+import { Button, Card, CardHeader, CardTitle, Input, Select, useToast } from "@peoplise/ui";
 import { toApiError } from "@peoplise/api-client";
 import { useCaseForCandidate, useScoringContext, useSubmitReviewerScoring } from "../hooks/useCases";
 
@@ -76,43 +76,27 @@ export function ReviewerScoringCard({ candidateId, positionId }: ReviewerScoring
 
       {context.data && context.data.steps.length > 0 && (
         <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="scoring-step" className="text-sm font-medium text-slate-700">
-              {t("candidateDetail.step")}
-            </label>
-            <select
-              id="scoring-step"
-              className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              {...register("stepId")}
-            >
-              <option value="">—</option>
-              {context.data.steps.map((step) => (
-                <option key={step.stepId} value={step.stepId}>
-                  {step.content}
-                </option>
-              ))}
-            </select>
-            {errors.stepId && <p className="text-sm text-red-600">{errors.stepId.message}</p>}
-          </div>
+          <Select label={t("candidateDetail.step") as string} error={errors.stepId?.message} {...register("stepId")}>
+            <option value="">—</option>
+            {context.data.steps.map((step) => (
+              <option key={step.stepId} value={step.stepId}>
+                {step.content}
+              </option>
+            ))}
+          </Select>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="scoring-competency" className="text-sm font-medium text-slate-700">
-              {t("candidateDetail.competency")}
-            </label>
-            <select
-              id="scoring-competency"
-              className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              {...register("competencyId")}
-            >
-              <option value="">—</option>
-              {availableCompetencies?.map((competency) => (
-                <option key={competency.id} value={competency.id}>
-                  {competency.name}
-                </option>
-              ))}
-            </select>
-            {errors.competencyId && <p className="text-sm text-red-600">{errors.competencyId.message}</p>}
-          </div>
+          <Select
+            label={t("candidateDetail.competency") as string}
+            error={errors.competencyId?.message}
+            {...register("competencyId")}
+          >
+            <option value="">—</option>
+            {availableCompetencies?.map((competency) => (
+              <option key={competency.id} value={competency.id}>
+                {competency.name}
+              </option>
+            ))}
+          </Select>
 
           <Input
             label={t("candidateDetail.score") as string}

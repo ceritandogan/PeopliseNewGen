@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Button, Card, CardHeader, CardTitle, Input, useToast } from "@peoplise/ui";
+import { Button, Card, CardHeader, CardTitle, Input, Select, useToast } from "@peoplise/ui";
 import { toApiError, type CaseFlow, type CaseStepType } from "@peoplise/api-client";
 import { useAddFlow, useAddFlowStep, useCompetenciesForProject, useFlowsForProject } from "../hooks/useCases";
 
@@ -70,9 +70,8 @@ function AddFlowStepForm({
 
   return (
     <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
-      <select
+      <Select
         aria-label={t("positionDetail.stepType") as string}
-        className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         value={type}
         onChange={(e) => setType(e.target.value as CaseStepType)}
       >
@@ -81,7 +80,7 @@ function AddFlowStepForm({
             {stepType}
           </option>
         ))}
-      </select>
+      </Select>
 
       <Input
         label={t("positionDetail.stepContent") as string}

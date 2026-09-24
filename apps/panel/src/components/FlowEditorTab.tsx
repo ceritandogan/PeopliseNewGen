@@ -14,7 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Button, Card, Input, Modal, useToast } from "@peoplise/ui";
+import { Button, Card, Input, Modal, Select, useToast } from "@peoplise/ui";
 import { toApiError, type StageRuleType, type StageType, type WorkflowStage } from "@peoplise/api-client";
 import {
   useAddStageRule,
@@ -94,9 +94,9 @@ function AddStageRuleForm({ onAdd }: { onAdd: (type: StageRuleType, threshold: n
 
   return (
     <div className="flex flex-col gap-1 pt-1">
-      <select
+      <Select
+        size="sm"
         aria-label={t("positions.ruleType") as string}
-        className="h-7 rounded border border-slate-300 bg-white px-1.5 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         value={type}
         onChange={(e) => {
           setType(e.target.value as StageRuleType);
@@ -108,7 +108,7 @@ function AddStageRuleForm({ onAdd }: { onAdd: (type: StageRuleType, threshold: n
             {t(`positions.ruleType_${ruleType}`)}
           </option>
         ))}
-      </select>
+      </Select>
       <div className="flex gap-1">
         <input
           type="number"
@@ -284,22 +284,13 @@ export function FlowEditorTab({ positionId }: { positionId: string }) {
       <Modal open={isAddOpen} onClose={() => setAddOpen(false)} title={t("positions.addStage") as string}>
         <form onSubmit={onAddStage} className="flex flex-col gap-3" noValidate>
           <Input label={t("positionDetail.name") as string} error={errors.name?.message} {...register("name")} />
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="stage-type" className="text-sm font-medium text-slate-700">
-              {t("positions.stageType")}
-            </label>
-            <select
-              id="stage-type"
-              className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              {...register("type")}
-            >
-              {STAGE_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select label={t("positions.stageType") as string} {...register("type")}>
+            {STAGE_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </Select>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>
               {t("common.cancel")}

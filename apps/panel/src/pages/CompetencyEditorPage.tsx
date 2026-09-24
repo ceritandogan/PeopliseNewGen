@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Button, Card, CardHeader, CardTitle, Input, useToast } from "@peoplise/ui";
+import { Button, Card, CardHeader, CardTitle, Input, Select, useToast } from "@peoplise/ui";
 import { toApiError, type Competency } from "@peoplise/api-client";
 import {
   useAddCompetency,
@@ -37,23 +37,13 @@ function AddLevelForm({ competency, caseBotProjectId }: { competency: Competency
 
   return (
     <div className="flex items-end gap-2">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={`level-${competency.id}`} className="text-sm font-medium text-slate-700">
-          {t("positionDetail.level")}
-        </label>
-        <select
-          id={`level-${competency.id}`}
-          className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-          value={level}
-          onChange={(e) => setLevel(Number(e.target.value))}
-        >
-          {LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </div>
+      <Select label={t("positionDetail.level") as string} value={level} onChange={(e) => setLevel(Number(e.target.value))}>
+        {LEVELS.map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </Select>
       <Input
         label={t("positionDetail.levelDescription") as string}
         value={description}

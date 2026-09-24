@@ -3,6 +3,7 @@ export * from "./lib/cn";
 export * from "./components/Button";
 export * from "./components/Badge";
 export * from "./components/Input";
+export * from "./components/Select";
 export * from "./components/Card";
 export * from "./components/Modal";
 export * from "./components/DataTable";
