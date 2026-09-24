@@ -76,6 +76,11 @@ export async function getCaseForCandidate(candidateId: string, positionId: strin
   return data;
 }
 
+/** HR/panel-only: re-emails the candidate's video-interview link. Unlike Start's delivery, a failure here surfaces as a real error. */
+export async function resendCaseLink(candidateId: string, positionId: string): Promise<void> {
+  await httpClient.post("/api/cases/resend-link", { candidateId, positionId });
+}
+
 export async function getCandidateComparison(caseBotProjectId: string): Promise<CandidateComparisonItem[]> {
   const { data } = await httpClient.get<CandidateComparisonItem[]>(
     `/api/case-bot-projects/${caseBotProjectId}/comparison`,

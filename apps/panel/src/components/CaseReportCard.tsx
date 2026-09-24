@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Card, CardHeader, CardTitle } from "@peoplise/ui";
+import { Button, Card, CardHeader, CardTitle, useToast } from "@peoplise/ui";
 import { toApiError } from "@peoplise/api-client";
-import { useCaseForCandidate, useCaseReport } from "../hooks/useCases";
+import { useCaseForCandidate, useCaseReport, useResendCaseLink } from "../hooks/useCases";
 
 interface CaseReportCardProps {
   candidateId: string;
@@ -17,16 +17,32 @@ interface CaseReportCardProps {
  */
 export function CaseReportCard({ candidateId, positionId }: CaseReportCardProps) {
   const { t } = useTranslation();
+  const { show } = useToast();
   const lookup = useCaseForCandidate(candidateId, positionId);
   const caseId = lookup.data?.caseId ?? null;
   const report = useCaseReport(caseId);
   const reportError = report.error ? toApiError(report.error) : null;
   const isInProgress = reportError?.title === "Case.NotCompleted";
+  const resendLink = useResendCaseLink();
+
+  const onResend = async () => {
+    try {
+      await resendLink.mutateAsync({ candidateId, positionId });
+      show(t("candidateDetail.linkResent") as string, "success");
+    } catch (error) {
+      show(toApiError(error).title, "error");
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t("candidateDetail.videoAnswer")}</CardTitle>
+        {caseId && (
+          <Button variant="secondary" size="sm" onClick={onResend} disabled={resendLink.isPending}>
+            {t("candidateDetail.resendLink")}
+          </Button>
+        )}
       </CardHeader>
 
       {(lookup.isLoading || (caseId && report.isLoading)) && (

@@ -186,6 +186,8 @@
     "conversation": "HR bot conversation",
     "noConversation": "Candidate hasn't started the HR chat yet",
     "capturedAnswers": "Captured answers",
+    "resendLink": "Resend link",
+    "linkResent": "Link resent.",
     "noCase": "Candidate hasn't started the video interview yet",
     "caseInProgress": "Video interview in progress — no report yet",
     "reviewerScoring": "Reviewer scoring",

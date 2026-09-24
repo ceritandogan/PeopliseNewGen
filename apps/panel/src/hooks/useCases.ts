@@ -13,6 +13,13 @@ export function useCaseForCandidate(candidateId: string | undefined, positionId:
   });
 }
 
+export function useResendCaseLink() {
+  return useMutation({
+    mutationFn: ({ candidateId, positionId }: { candidateId: string; positionId: string }) =>
+      casesApi.resendCaseLink(candidateId, positionId),
+  });
+}
+
 export function useCaseReport(caseId: string | null | undefined) {
   return useQuery({
     queryKey: ["cases", caseId, "report"],

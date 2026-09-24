@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Badge, Card, CardHeader, CardTitle } from "@peoplise/ui";
-import { useConversationForCandidate, useConversationHistory } from "../hooks/useConversation";
+import { Badge, Button, Card, CardHeader, CardTitle, useToast } from "@peoplise/ui";
+import { toApiError } from "@peoplise/api-client";
+import { useConversationForCandidate, useConversationHistory, useResendConversationLink } from "../hooks/useConversation";
 
 interface ConversationTranscriptCardProps {
   candidateId: string;
@@ -15,15 +16,33 @@ interface ConversationTranscriptCardProps {
  */
 export function ConversationTranscriptCard({ candidateId, positionId }: ConversationTranscriptCardProps) {
   const { t } = useTranslation();
+  const { show } = useToast();
   const lookup = useConversationForCandidate(candidateId, positionId);
   const conversationId = lookup.data?.conversationId ?? null;
   const history = useConversationHistory(conversationId);
+  const resendLink = useResendConversationLink();
+
+  const onResend = async () => {
+    try {
+      await resendLink.mutateAsync({ candidateId, positionId });
+      show(t("candidateDetail.linkResent") as string, "success");
+    } catch (error) {
+      show(toApiError(error).title, "error");
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("candidateDetail.conversation")}</CardTitle>
-        {history.data && <Badge variant="brand">{history.data.status}</Badge>}
+        <div className="flex items-center gap-2">
+          <CardTitle>{t("candidateDetail.conversation")}</CardTitle>
+          {history.data && <Badge variant="brand">{history.data.status}</Badge>}
+        </div>
+        {conversationId && (
+          <Button variant="secondary" size="sm" onClick={onResend} disabled={resendLink.isPending}>
+            {t("candidateDetail.resendLink")}
+          </Button>
+        )}
       </CardHeader>
 
       {(lookup.isLoading || (conversationId && history.isLoading)) && (

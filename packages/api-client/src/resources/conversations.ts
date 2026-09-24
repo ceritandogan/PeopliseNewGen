@@ -44,3 +44,8 @@ export async function getConversationForCandidate(
   });
   return data;
 }
+
+/** HR/panel-only: re-emails the candidate's bot-chat link. Unlike Start's delivery, a failure here surfaces as a real error. */
+export async function resendConversationLink(candidateId: string, positionId: string): Promise<void> {
+  await httpClient.post("/api/conversations/resend-link", { candidateId, positionId });
+}

@@ -186,6 +186,8 @@
     "conversation": "İK botu sohbeti",
     "noConversation": "Aday henüz İK sohbetine başlamadı",
     "capturedAnswers": "Alınan yanıtlar",
+    "resendLink": "Bağlantıyı yeniden gönder",
+    "linkResent": "Bağlantı yeniden gönderildi.",
     "noCase": "Aday henüz video mülakata başlamadı",
     "caseInProgress": "Video mülakat devam ediyor — henüz rapor yok",
     "reviewerScoring": "Değerlendirici puanlaması",

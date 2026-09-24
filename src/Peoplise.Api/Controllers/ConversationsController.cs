@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Peoplise.Api.Filters;
+using Peoplise.Api.Services;
 using Peoplise.Infrastructure.Security;
 using Peoplise.Modules.ATS.Application.Positions.Queries;
 using Peoplise.Modules.HrBot.Application.Conversations.Commands;
@@ -20,11 +21,16 @@ public sealed class ConversationsController : ControllerBase
 
     private readonly IMediator _mediator;
     private readonly ICandidateResourceTokenService _candidateTokens;
+    private readonly ICandidateLinkMailer _linkMailer;
+    private readonly ILogger<ConversationsController> _logger;
 
-    public ConversationsController(IMediator mediator, ICandidateResourceTokenService candidateTokens)
+    public ConversationsController(
+        IMediator mediator, ICandidateResourceTokenService candidateTokens, ICandidateLinkMailer linkMailer, ILogger<ConversationsController> logger)
     {
         _mediator = mediator;
         _candidateTokens = candidateTokens;
+        _linkMailer = linkMailer;
+        _logger = logger;
     }
 
     /// <summary>
@@ -51,7 +57,43 @@ public sealed class ConversationsController : ControllerBase
         var token = _candidateTokens.Issue(
             CandidateResourceType.Conversation, result.Value.ConversationId, DateTimeOffset.UtcNow.Add(CandidateTokenLifetime));
 
+        // Best-effort: the conversation itself already exists and its token is already
+        // minted by this point, so a delivery failure here must not fail an otherwise
+        // successful Start — same reasoning as EvaluationSubmittedEventHandler's
+        // post-save side effect. The candidate app still shows/copies the link in the
+        // current session regardless (ADR 0004), so a failed email isn't a dead end.
+        try
+        {
+            await _linkMailer.SendConversationLinkAsync(command.PositionId, command.CandidateId, result.Value.ConversationId, token, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to email conversation link for candidate {CandidateId}.", command.CandidateId);
+        }
+
         return Ok(new StartConversationResponse(result.Value, token));
+    }
+
+    /// <summary>
+    /// Panel-facing: HR re-sends the link when a candidate says they never got it, or
+    /// lost it. Unlike Start's best-effort delivery, sending IS the point of this action,
+    /// so a failure here surfaces as a real error rather than being swallowed.
+    /// </summary>
+    [HttpPost("resend-link")]
+    public async Task<IActionResult> ResendLink([FromBody] ResendConversationLinkRequest request, CancellationToken cancellationToken)
+    {
+        var lookup = await _mediator.Send(new GetConversationForCandidateQuery(request.CandidateId, request.PositionId), cancellationToken);
+        if (lookup.IsFailure)
+            return lookup.ToActionResult(this);
+        if (lookup.Value is not { } conversationId)
+            return NotFound();
+
+        var token = _candidateTokens.Issue(
+            CandidateResourceType.Conversation, conversationId, DateTimeOffset.UtcNow.Add(CandidateTokenLifetime));
+
+        await _linkMailer.SendConversationLinkAsync(request.PositionId, request.CandidateId, conversationId, token, cancellationToken);
+
+        return Ok();
     }
 
     [AllowAnonymous]
@@ -116,3 +158,5 @@ public sealed record WithdrawConversationConsentRequest(string? Reason);
 public sealed record StartConversationResponse(StartConversationResult Conversation, string CandidateToken);
 
 public sealed record ConversationForCandidateResponse(Guid? ConversationId);
+
+public sealed record ResendConversationLinkRequest(Guid CandidateId, Guid PositionId);

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Peoplise.Api;
 using Peoplise.Api.BackgroundJobs;
 using Peoplise.Api.Middleware;
+using Peoplise.Api.Services;
 using Peoplise.Infrastructure;
 using Peoplise.Infrastructure.Identity;
 using Peoplise.Infrastructure.Persistence;
@@ -85,6 +86,10 @@ builder.Services.AddInfrastructure(
 // reflection-based scanning can't wire up on its own. See
 // Peoplise.Modules.VideoInterview.DependencyInjection.
 builder.Services.AddVideoInterviewModule();
+
+// Composition-root service — spans ATS/HrBot/VideoInterview/Infrastructure, so it
+// can't live in any one module. See CandidateLinkMailer's own remarks.
+builder.Services.AddScoped<ICandidateLinkMailer, CandidateLinkMailer>();
 
 // Lives here, not inside either module, because it sweeps both VideoInterview's Case
 // and HrBot's Conversation — see ADR 0003.

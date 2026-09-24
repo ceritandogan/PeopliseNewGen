@@ -16,6 +16,7 @@ using Peoplise.Infrastructure.Events;
 using Peoplise.Infrastructure.Identity;
 using Peoplise.Infrastructure.Media;
 using Peoplise.Infrastructure.Modules;
+using Peoplise.Infrastructure.Notifications;
 using Peoplise.Infrastructure.Persistence;
 using Peoplise.Infrastructure.Persistence.Interceptors;
 using Peoplise.Infrastructure.Security;
@@ -26,6 +27,7 @@ using Peoplise.SharedKernel.Domain;
 using Peoplise.SharedKernel.Events;
 using Peoplise.SharedKernel.Media;
 using Peoplise.SharedKernel.MultiTenancy;
+using Peoplise.SharedKernel.Notifications;
 using Peoplise.SharedKernel.Persistence;
 
 namespace Peoplise.Infrastructure;
@@ -68,6 +70,7 @@ public static class DependencyInjection
         services.AddAuth(configuration, useDevelopmentAuthDefaults);
         services.AddSingleton<ICandidateResourceTokenService, HmacCandidateResourceTokenService>();
         services.AddMediaAndAI(configuration);
+        services.AddNotifications(configuration);
 
         return services;
     }
@@ -97,6 +100,40 @@ public static class DependencyInjection
         else
         {
             services.AddSingleton<IAIProvider, NotConfiguredAIProvider>();
+        }
+
+        return services;
+    }
+
+    /// <summary>
+    /// The real email sender (<see cref="SmtpEmailSender"/>, plain SMTP via MailKit —
+    /// provider-agnostic, works against any SMTP endpoint including a Mailtrap sandbox
+    /// for local verification) once <c>Email:Smtp:Host</c> is configured
+    /// (<c>scripts/setup-email-smtp.sh</c> walks through a Mailtrap sandbox); falls back
+    /// to the loud-failure placeholder otherwise — the same "safe until configured" shape
+    /// <see cref="AddMediaAndAI"/> uses for <see cref="IAIProvider"/>.
+    /// </summary>
+    private static IServiceCollection AddNotifications(this IServiceCollection services, IConfiguration configuration)
+    {
+        var smtp = configuration.GetSection("Email:Smtp");
+        var host = smtp["Host"];
+
+        if (!string.IsNullOrEmpty(host))
+        {
+            var options = new SmtpOptions(
+                Host: host,
+                Port: int.TryParse(smtp["Port"], out var port) ? port : 587,
+                Username: smtp["Username"] ?? string.Empty,
+                Password: smtp["Password"] ?? string.Empty,
+                FromAddress: smtp["FromAddress"] ?? string.Empty,
+                FromName: smtp["FromName"] ?? string.Empty,
+                UseSsl: !bool.TryParse(smtp["UseSsl"], out var useSsl) || useSsl);
+            services.AddSingleton(options);
+            services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        }
+        else
+        {
+            services.AddSingleton<IEmailSender, NotConfiguredEmailSender>();
         }
 
         return services;

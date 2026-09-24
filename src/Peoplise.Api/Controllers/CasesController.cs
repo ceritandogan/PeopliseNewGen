@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Peoplise.Api.Filters;
+using Peoplise.Api.Services;
 using Peoplise.Infrastructure.Security;
 using Peoplise.Modules.ATS.Application.Positions.Queries;
 using Peoplise.Modules.VideoInterview.Application.Cases.Commands;
@@ -22,11 +23,16 @@ public sealed class CasesController : ControllerBase
 
     private readonly IMediator _mediator;
     private readonly ICandidateResourceTokenService _candidateTokens;
+    private readonly ICandidateLinkMailer _linkMailer;
+    private readonly ILogger<CasesController> _logger;
 
-    public CasesController(IMediator mediator, ICandidateResourceTokenService candidateTokens)
+    public CasesController(
+        IMediator mediator, ICandidateResourceTokenService candidateTokens, ICandidateLinkMailer linkMailer, ILogger<CasesController> logger)
     {
         _mediator = mediator;
         _candidateTokens = candidateTokens;
+        _linkMailer = linkMailer;
+        _logger = logger;
     }
 
     /// <summary>
@@ -52,7 +58,38 @@ public sealed class CasesController : ControllerBase
         var token = _candidateTokens.Issue(
             CandidateResourceType.Case, result.Value.CaseId, DateTimeOffset.UtcNow.Add(CandidateTokenLifetime));
 
+        // Best-effort — see ConversationsController.Start's identical reasoning.
+        try
+        {
+            await _linkMailer.SendCaseLinkAsync(command.PositionId, command.CandidateId, result.Value.CaseId, token, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to email case link for candidate {CandidateId}.", command.CandidateId);
+        }
+
         return Ok(new StartCandidateCaseResponse(result.Value, token));
+    }
+
+    /// <summary>
+    /// Panel-facing resend — see ConversationsController.ResendLink's identical reasoning
+    /// (must-succeed, not best-effort).
+    /// </summary>
+    [HttpPost("resend-link")]
+    public async Task<IActionResult> ResendLink([FromBody] ResendCaseLinkRequest request, CancellationToken cancellationToken)
+    {
+        var lookup = await _mediator.Send(new GetCaseForCandidateQuery(request.CandidateId, request.PositionId), cancellationToken);
+        if (lookup.IsFailure)
+            return lookup.ToActionResult(this);
+        if (lookup.Value is not { } caseId)
+            return NotFound();
+
+        var token = _candidateTokens.Issue(
+            CandidateResourceType.Case, caseId, DateTimeOffset.UtcNow.Add(CandidateTokenLifetime));
+
+        await _linkMailer.SendCaseLinkAsync(request.PositionId, request.CandidateId, caseId, token, cancellationToken);
+
+        return Ok();
     }
 
     [AllowAnonymous]
@@ -174,3 +211,5 @@ public sealed record StartCandidateCaseResponse(StartCandidateCaseResult Case, s
 
 /// <summary>caseId is null when the candidate hasn't started their video interview yet — not an error.</summary>
 public sealed record CaseForCandidateResponse(Guid? CaseId);
+
+public sealed record ResendCaseLinkRequest(Guid CandidateId, Guid PositionId);
