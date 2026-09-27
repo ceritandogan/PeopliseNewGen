@@ -443,3 +443,20 @@ export interface WorkflowStagesResult {
   workflowDefinitionId: string;
   stages: WorkflowStage[];
 }
+
+export interface CreateTenantRequest {
+  workspaceName: string;
+  displayName: string;
+  email: string;
+  password: string;
+}
+
+export interface CreateTenantResponse {
+  tenantId: string;
+  slug: string;
+}
+
+export interface CurrentTenant {
+  name: string;
+  slug: string;
+}

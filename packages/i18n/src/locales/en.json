@@ -33,9 +33,21 @@
     "settings": "Settings"
   },
   "header": {
-    "selectTenant": "Select workspace",
+    "workspace": "Workspace",
     "language": "Language",
     "profile": "Profile"
+  },
+  "signup": {
+    "title": "Create your workspace",
+    "subtitle": "Set up a new company workspace and your own account in one step.",
+    "workspaceName": "Workspace name",
+    "displayName": "Your name",
+    "confirmPassword": "Confirm password",
+    "submit": "Create workspace",
+    "submitting": "Creating your workspace…",
+    "passwordMismatch": "Passwords do not match.",
+    "alreadyHaveAccount": "Already have a workspace?",
+    "createWorkspace": "Create a workspace"
   },
   "dashboard": {
     "title": "Dashboard",

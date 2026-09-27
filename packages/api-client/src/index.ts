@@ -10,4 +10,5 @@ export * as conversationsApi from "./resources/conversations";
 export * as casesApi from "./resources/cases";
 export * as botProjectsApi from "./resources/botProjects";
 export * as workflowsApi from "./resources/workflows";
+export * as tenantsApi from "./resources/tenants";
 export { authAdapter } from "./resources/auth";

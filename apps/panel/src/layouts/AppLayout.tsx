@@ -1,7 +1,8 @@
 import { NavLink, Outlet } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useAuth, useTenant, useThemeStore, cn } from "@peoplise/ui";
+import { useAuth, useThemeStore, cn } from "@peoplise/ui";
 import { supportedLanguages } from "@peoplise/i18n";
+import { useCurrentTenant } from "../hooks/useTenants";
 
 const NAV_ITEMS = [
   { to: "/", labelKey: "nav.dashboard" },
@@ -11,7 +12,7 @@ const NAV_ITEMS = [
 export function AppLayout() {
   const { t, i18n } = useTranslation();
   const { logout, session } = useAuth();
-  const { tenantSlug } = useTenant();
+  const { data: tenant } = useCurrentTenant();
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
 
   return (
@@ -43,15 +44,10 @@ export function AppLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <label htmlFor="tenant-select" className="sr-only">
-              {t("header.selectTenant")}
-            </label>
-            <select id="tenant-select" defaultValue={tenantSlug ?? ""} className="rounded-md border border-slate-300 px-2 py-1 text-sm">
-              <option value="" disabled>
-                {t("header.selectTenant")}
-              </option>
-              {tenantSlug && <option value={tenantSlug}>{tenantSlug}</option>}
-            </select>
+            <span className="text-xs uppercase tracking-wide text-slate-400" aria-hidden="true">
+              {t("header.workspace")}
+            </span>
+            <span className="font-medium text-slate-900">{tenant?.name ?? " "}</span>
           </div>
 
           <div className="flex items-center gap-3">

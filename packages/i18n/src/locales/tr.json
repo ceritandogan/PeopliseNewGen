@@ -33,9 +33,21 @@
     "settings": "Ayarlar"
   },
   "header": {
-    "selectTenant": "Çalışma alanı seç",
+    "workspace": "Çalışma alanı",
     "language": "Dil",
     "profile": "Profil"
+  },
+  "signup": {
+    "title": "Çalışma alanınızı oluşturun",
+    "subtitle": "Yeni bir şirket çalışma alanı ve kendi hesabınızı tek adımda oluşturun.",
+    "workspaceName": "Çalışma alanı adı",
+    "displayName": "Adınız",
+    "confirmPassword": "Şifreyi onayla",
+    "submit": "Çalışma alanı oluştur",
+    "submitting": "Çalışma alanınız oluşturuluyor…",
+    "passwordMismatch": "Şifreler eşleşmiyor.",
+    "alreadyHaveAccount": "Zaten bir çalışma alanınız mı var?",
+    "createWorkspace": "Çalışma alanı oluştur"
   },
   "dashboard": {
     "title": "Panel",

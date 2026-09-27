@@ -38,6 +38,7 @@ public class AppDbContext : TenantAwareDbContext
     protected override Guid? CurrentTenantId => _tenantContext.TenantId?.Value;
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Tenant> Tenants => Set<Tenant>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -59,9 +60,10 @@ public class AppDbContext : TenantAwareDbContext
         foreach (var assembly in _moduleAssemblyRegistry.Assemblies)
             modelBuilder.ApplyConfigurationsFromAssembly(assembly);
 
-        // User lives in Infrastructure itself, not a module, so it isn't reachable via
-        // the module-assembly scan above — applied explicitly instead.
+        // User/Tenant live in Infrastructure itself, not a module, so they aren't
+        // reachable via the module-assembly scan above — applied explicitly instead.
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new TenantConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

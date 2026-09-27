@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, type Location } from "react-router";
+import { Link, useLocation, type Location } from "react-router";
 import { Button, useAuth, useToast } from "@peoplise/ui";
 import { toApiError } from "@peoplise/api-client";
 
@@ -36,6 +36,12 @@ export function LoginPage() {
         <Button onClick={onSignIn} disabled={isRedirecting} className="w-full">
           {t("auth.signIn")}
         </Button>
+
+        <p className="mt-4 text-sm text-slate-500">
+          <Link to="/signup" className="text-brand-600 hover:underline">
+            {t("signup.createWorkspace")}
+          </Link>
+        </p>
       </div>
     </div>
   );

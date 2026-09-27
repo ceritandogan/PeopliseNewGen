@@ -24,8 +24,21 @@ public static class DatabaseSeeder
         // IgnoreQueryFilters: no tenant is resolved during startup seeding (nothing has
         // logged in yet), so the tenant global query filter would otherwise hide
         // everything, including the check for whether seeding already ran.
-        var alreadySeeded = await context.Users.IgnoreQueryFilters().AnyAsync(cancellationToken);
-        if (alreadySeeded) return;
+        var tenantSeeded = await context.Tenants.AnyAsync(cancellationToken);
+        var userSeeded = await context.Users.IgnoreQueryFilters().AnyAsync(cancellationToken);
+        if (tenantSeeded && userSeeded) return;
+
+        // Same "partial seed" failure mode DemoDataSeeder hit once before (a gate that
+        // only checked one of two aggregates that must be seeded together) — fail loudly
+        // rather than silently re-inserting a duplicate demo tenant/user.
+        if (tenantSeeded != userSeeded)
+        {
+            throw new InvalidOperationException(
+                "Database is partially seeded (Tenants and Users disagree on whether seeding ran). " +
+                "Reset your local Postgres volume and restart.");
+        }
+
+        context.Tenants.Add(new Tenant(id: DemoTenantId, name: "Demo Workspace", slug: "demo"));
 
         var hasher = new PasswordHasher<User>();
         var user = new User(
