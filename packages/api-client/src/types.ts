@@ -298,6 +298,27 @@ export interface CandidateNameLookup {
   name: string;
 }
 
+/** No candidateId here — unlike the public apply form, it's minted server-side. See CandidatesController.AddManual. */
+export interface AddCandidateManuallyRequest {
+  positionId: string;
+  candidateName: string;
+  candidateEmail: string;
+  candidatePhone?: string;
+  resumeUrl?: string;
+}
+
+/** `type` is "bot-chat" or "video-interview" — the same path segment the link itself uses. */
+export interface CandidateInterviewLink {
+  type: "bot-chat" | "video-interview";
+  url: string;
+}
+
+/** `links` is empty when the position has no configured project of either kind yet — a normal outcome, not an error. */
+export interface AddCandidateManuallyResponse {
+  candidateProcessId: string;
+  links: CandidateInterviewLink[];
+}
+
 export interface CaseBotProjectSummary {
   id: string;
   name: string;

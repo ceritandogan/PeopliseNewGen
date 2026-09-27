@@ -1,5 +1,7 @@
 import { httpClient } from "../http";
 import type {
+  AddCandidateManuallyRequest,
+  AddCandidateManuallyResponse,
   CandidateDetail,
   CandidateNameLookup,
   CandidatePipelineItem,
@@ -18,6 +20,12 @@ import type {
  */
 export async function submitApplication(request: SubmitCandidateApplicationRequest): Promise<{ id: string }> {
   const { data } = await httpClient.post<{ id: string }>("/api/candidates/apply", request);
+  return data;
+}
+
+/** HR-facing counterpart to `submitApplication` — authenticated, server-mints the candidateId. See CandidatesController.AddManual. */
+export async function addCandidateManually(request: AddCandidateManuallyRequest): Promise<AddCandidateManuallyResponse> {
+  const { data } = await httpClient.post<AddCandidateManuallyResponse>("/api/candidates/manual", request);
   return data;
 }
 

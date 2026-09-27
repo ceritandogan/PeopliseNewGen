@@ -16,7 +16,9 @@
     "submit": "Submit",
     "confirm": "Confirm",
     "somethingWentWrong": "Something went wrong.",
-    "noResults": "No results found."
+    "noResults": "No results found.",
+    "copy": "Copy",
+    "copied": "Copied!"
   },
   "auth": {
     "signIn": "Sign in",
@@ -180,6 +182,20 @@
     "rejected": "Rejected",
     "eliminated": "Eliminated",
     "timedOut": "Timed Out"
+  },
+  "addCandidate": {
+    "button": "Add candidate",
+    "title": "Add candidate",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "resumeUrl": "Resume URL",
+    "submit": "Add candidate",
+    "added": "Candidate added.",
+    "botChatLink": "HR bot chat link",
+    "videoInterviewLink": "Video interview link",
+    "noLinksYet": "No interview flow is configured for this position yet — add a video interview or HR bot project first, then use \"Resend link\" from the candidate's page.",
+    "done": "Done"
   },
   "candidateDetail": {
     "profile": "Profile",

@@ -1,11 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { candidatesApi, type GetCandidatePipelineParams, type SubmitEvaluationRequest } from "@peoplise/api-client";
+import {
+  candidatesApi,
+  type AddCandidateManuallyRequest,
+  type GetCandidatePipelineParams,
+  type SubmitEvaluationRequest,
+} from "@peoplise/api-client";
 
 export function useCandidatePipeline(params: GetCandidatePipelineParams) {
   return useQuery({
     queryKey: ["candidates", "pipeline", params],
     queryFn: () => candidatesApi.getCandidatePipeline(params),
     enabled: Boolean(params.positionId),
+  });
+}
+
+export function useAddCandidateManually(positionId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: Omit<AddCandidateManuallyRequest, "positionId">) =>
+      candidatesApi.addCandidateManually({ ...request, positionId }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["candidates", "pipeline"] }),
   });
 }
 

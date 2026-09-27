@@ -20,6 +20,16 @@ public interface ICandidateLinkMailer
     Task SendConversationLinkAsync(Guid positionId, Guid candidateId, Guid conversationId, string candidateToken, CancellationToken cancellationToken = default);
 
     Task SendCaseLinkAsync(Guid positionId, Guid candidateId, Guid caseId, string candidateToken, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Same URL <see cref="SendConversationLinkAsync"/> emails — exposed separately so a
+    /// caller can show/copy it even when the email attempt fails or SMTP isn't configured
+    /// (see CandidatesController.AddManual's on-screen fallback).
+    /// </summary>
+    string BuildConversationUrl(Guid positionId, Guid conversationId, string candidateToken);
+
+    /// <summary>Same URL <see cref="SendCaseLinkAsync"/> emails — see <see cref="BuildConversationUrl"/>'s remarks.</summary>
+    string BuildCaseUrl(Guid positionId, Guid caseId, string candidateToken);
 }
 
 public sealed class CandidateLinkMailer : ICandidateLinkMailer
@@ -37,10 +47,16 @@ public sealed class CandidateLinkMailer : ICandidateLinkMailer
     }
 
     public Task SendConversationLinkAsync(Guid positionId, Guid candidateId, Guid conversationId, string candidateToken, CancellationToken cancellationToken = default) =>
-        SendAsync(positionId, candidateId, BuildUrl("bot-chat", positionId, "conversationId", conversationId, candidateToken), cancellationToken);
+        SendAsync(positionId, candidateId, BuildConversationUrl(positionId, conversationId, candidateToken), cancellationToken);
 
     public Task SendCaseLinkAsync(Guid positionId, Guid candidateId, Guid caseId, string candidateToken, CancellationToken cancellationToken = default) =>
-        SendAsync(positionId, candidateId, BuildUrl("video-interview", positionId, "caseId", caseId, candidateToken), cancellationToken);
+        SendAsync(positionId, candidateId, BuildCaseUrl(positionId, caseId, candidateToken), cancellationToken);
+
+    public string BuildConversationUrl(Guid positionId, Guid conversationId, string candidateToken) =>
+        BuildUrl("bot-chat", positionId, "conversationId", conversationId, candidateToken);
+
+    public string BuildCaseUrl(Guid positionId, Guid caseId, string candidateToken) =>
+        BuildUrl("video-interview", positionId, "caseId", caseId, candidateToken);
 
     private async Task SendAsync(Guid positionId, Guid candidateId, string url, CancellationToken cancellationToken)
     {

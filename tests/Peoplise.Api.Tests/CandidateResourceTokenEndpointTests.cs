@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Peoplise.Infrastructure.Security;
 using Peoplise.Modules.HrBot.Domain.Aggregates;
 using Peoplise.Modules.HrBot.Domain.ValueObjects;
+using Peoplise.SharedKernel.MultiTenancy;
 using Peoplise.SharedKernel.Persistence;
 
 namespace Peoplise.Api.Tests;
@@ -29,6 +30,14 @@ public class CandidateResourceTokenEndpointTests
             BotProjectId.New(), Guid.NewGuid(), ConversationInterface.WebChat,
             Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow);
 
+        // No real HTTP request here (this is direct-repository seeding, outside any
+        // request pipeline) and no tenant claim to resolve — TenantInterceptor requires
+        // one for any new IHasTenant row (see its remarks), so this stands one up
+        // ourselves. Safe for what this file tests: every request the tests below make
+        // resolves the conversation's tenant from the row itself (ResolveConversationTenantQuery,
+        // an IgnoreQueryFilters lookup — see ConversationsController.Respond), not from
+        // any tenant claim of their own, so which tenant this is doesn't matter here.
+        using var _ = AmbientTenantOverride.Begin(TenantId.New());
         await conversations.AddAsync(conversation);
         await unitOfWork.SaveChangesAsync();
 

@@ -16,7 +16,9 @@
     "submit": "Gönder",
     "confirm": "Onayla",
     "somethingWentWrong": "Bir şeyler ters gitti.",
-    "noResults": "Sonuç bulunamadı."
+    "noResults": "Sonuç bulunamadı.",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı!"
   },
   "auth": {
     "signIn": "Giriş yap",
@@ -180,6 +182,20 @@
     "rejected": "Red",
     "eliminated": "Elendi",
     "timedOut": "Zaman Aşımı"
+  },
+  "addCandidate": {
+    "button": "Aday ekle",
+    "title": "Aday ekle",
+    "name": "Ad Soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "resumeUrl": "Özgeçmiş URL",
+    "submit": "Aday ekle",
+    "added": "Aday eklendi.",
+    "botChatLink": "HR bot sohbet bağlantısı",
+    "videoInterviewLink": "Video mülakat bağlantısı",
+    "noLinksYet": "Bu pozisyon için henüz bir mülakat akışı yapılandırılmamış — önce bir video mülakat veya HR bot projesi ekleyin, ardından adayın sayfasından \"Bağlantıyı yeniden gönder\"i kullanın.",
+    "done": "Tamam"
   },
   "candidateDetail": {
     "profile": "Profil",

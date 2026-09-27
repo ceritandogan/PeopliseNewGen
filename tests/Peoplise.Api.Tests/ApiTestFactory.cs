@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Peoplise.Infrastructure.Persistence;
+using Peoplise.Infrastructure.Persistence.Interceptors;
 
 namespace Peoplise.Api.Tests;
 
@@ -42,13 +43,23 @@ public sealed class ApiTestFactory : WebApplicationFactory<Program>
             // with two providers configured for the same context. Both have to go.
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
-            services.AddDbContext<AppDbContext>(options =>
+            services.AddDbContext<AppDbContext>((serviceProvider, options) =>
             {
                 options.UseInMemoryDatabase(_databaseName);
                 // Registers OpenIddict's client/token/scope/authorization entity sets on
                 // the model — dropped otherwise, since this replaces the original
                 // AddDbContext call (with its own UseOpenIddict()) rather than extending it.
                 options.UseOpenIddict();
+
+                // TenantInterceptor/AuditInterceptor are still registered (AddPersistence
+                // registers them independently of the AddDbContext call this replaces),
+                // just never chained onto this in-memory context's options — without this,
+                // a row created through a real authenticated HTTP request (not seeded
+                // directly via a repository) never gets IHasTenant.TenantId stamped, so it
+                // silently vanishes from every tenant-filtered read afterward.
+                options.AddInterceptors(
+                    serviceProvider.GetRequiredService<TenantInterceptor>(),
+                    serviceProvider.GetRequiredService<AuditInterceptor>());
             });
 
             services.AddAuthentication(TestAuthHandler.SchemeName)
