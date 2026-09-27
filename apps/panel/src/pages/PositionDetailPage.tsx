@@ -5,11 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, Button, Badge, Input, Modal, useToast, cn } from "@peoplise/ui";
-import { toApiError, type CaseBotProjectSummary, type BotProjectSummary } from "@peoplise/api-client";
+import { toApiError, type CaseBotProjectSummary, type BotProjectSummary, type PipelineStatus } from "@peoplise/api-client";
 import { usePositionDashboard } from "../hooks/usePositions";
 import { useCaseBotProjectsForPosition, useCreateCaseBotProject } from "../hooks/useCaseBotProjects";
 import { useBotProjectsForPosition, useCreateBotProject } from "../hooks/useBotProjects";
 import { FlowEditorTab } from "../components/FlowEditorTab";
+import { BOARD_STATUSES } from "./CandidatePipelinePage";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const TABS = ["overview", "flowEditor"] as const;
 type Tab = (typeof TABS)[number];
@@ -35,6 +37,7 @@ export function PositionDetailPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Breadcrumbs items={[{ label: t("nav.positions"), to: "/positions" }, { label: data?.title ?? t("common.loading") }]} />
       <h1 className="text-xl font-semibold text-slate-900">{data?.title ?? (isLoading ? t("common.loading") : positionId)}</h1>
 
       <div role="tablist" aria-label="Position sections" className="flex gap-1 border-b border-slate-200">
@@ -62,13 +65,24 @@ export function PositionDetailPage() {
             </CardHeader>
             {data ? (
               <ul className="flex flex-wrap gap-2">
-                {Object.entries(data.applicantsByStatus).map(([status, count]) => (
-                  <li key={status}>
-                    <Badge variant="neutral">
+                {Object.entries(data.applicantsByStatus).map(([status, count]) => {
+                  const pipelineStatus = status as PipelineStatus;
+                  const isOnBoard = BOARD_STATUSES.includes(pipelineStatus);
+                  const badge = (
+                    <Badge variant="neutral" className={isOnBoard ? "hover:bg-slate-200" : undefined}>
                       {status}: {count}
                     </Badge>
-                  </li>
-                ))}
+                  );
+                  return (
+                    <li key={status}>
+                      {isOnBoard ? (
+                        <Link to={`/positions/${positionId}/pipeline?status=${pipelineStatus}`}>{badge}</Link>
+                      ) : (
+                        badge
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
               <p className="text-sm text-slate-500">{t("common.loading")}</p>

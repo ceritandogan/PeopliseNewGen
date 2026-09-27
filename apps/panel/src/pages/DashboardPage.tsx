@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
-import { Card, CardHeader, CardTitle, Badge } from "@peoplise/ui";
+import { Card, Badge, cn } from "@peoplise/ui";
 import { usePositionsList } from "../hooks/usePositions";
 
 /**
@@ -10,6 +10,20 @@ import { usePositionsList } from "../hooks/usePositions";
  * design notes for why the total-applicants card relies on that.
  */
 const DASHBOARD_PAGE_SIZE = 200;
+
+const AVATAR_COLORS = [
+  "bg-brand-100 text-brand-700",
+  "bg-violet-100 text-violet-700",
+  "bg-amber-100 text-amber-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-pink-100 text-pink-700",
+  "bg-sky-100 text-sky-700",
+];
+
+function avatarColorFor(seed: string) {
+  const hash = [...seed].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
 
 export function DashboardPage() {
   const { t } = useTranslation();
@@ -21,12 +35,12 @@ export function DashboardPage() {
     <div className="flex flex-col gap-6">
       <h1 className="text-xl font-semibold text-slate-900">{t("dashboard.title")}</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("dashboard.candidateDistribution")}</CardTitle>
-        </CardHeader>
-        <p className="text-3xl font-bold text-brand-700">{totalApplicants}</p>
-        <p className="text-sm text-slate-500">{t("dashboard.totalApplicants")}</p>
+      <Card className="flex items-center gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-xl">📊</div>
+        <div>
+          <p className="text-sm font-medium text-slate-500">{t("dashboard.totalApplicants")}</p>
+          <p className="text-3xl font-bold text-slate-900">{totalApplicants}</p>
+        </div>
       </Card>
 
       <section aria-labelledby="positions-heading" className="flex flex-col gap-3">
@@ -40,16 +54,31 @@ export function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {positions.map((position) => (
-              <Card key={position.positionId}>
-                <CardHeader>
-                  <CardTitle>
-                    <Link to={`/positions/${position.positionId}`} className="text-brand-600 hover:underline">
-                      {position.title}
-                    </Link>
-                  </CardTitle>
-                  <Badge variant="brand">{position.applicantCount}</Badge>
-                </CardHeader>
-                <p className="text-sm text-slate-500">{position.department}</p>
+              <Card key={position.positionId} className="transition-shadow hover:shadow-md">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold",
+                        avatarColorFor(position.department || position.title),
+                      )}
+                    >
+                      {(position.department || position.title).slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <Link
+                        to={`/positions/${position.positionId}`}
+                        className="block truncate font-semibold text-slate-900 hover:text-brand-600 hover:underline"
+                      >
+                        {position.title}
+                      </Link>
+                      <p className="truncate text-sm text-slate-500">{position.department}</p>
+                    </div>
+                  </div>
+                  <Badge variant="brand" className="shrink-0">
+                    {position.applicantCount}
+                  </Badge>
+                </div>
               </Card>
             ))}
           </div>

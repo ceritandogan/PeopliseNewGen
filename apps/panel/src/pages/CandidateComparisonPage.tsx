@@ -4,11 +4,14 @@ import { Card, DataTable, type DataTableColumn } from "@peoplise/ui";
 import type { CandidateComparisonItem } from "@peoplise/api-client";
 import { useCandidateComparison, useCompetenciesForProject } from "../hooks/useCases";
 import { useCandidateNames } from "../hooks/useCandidates";
+import { usePositionDashboard } from "../hooks/usePositions";
 import { CompetencyComparisonChart } from "../components/CompetencyComparisonChart";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 export function CandidateComparisonPage() {
   const { t } = useTranslation();
   const { positionId, caseBotProjectId } = useParams<{ positionId: string; caseBotProjectId: string }>();
+  const { data: position } = usePositionDashboard(positionId);
   const { data: items, isLoading: itemsLoading } = useCandidateComparison(caseBotProjectId);
   const { data: competencies, isLoading: competenciesLoading } = useCompetenciesForProject(caseBotProjectId);
 
@@ -53,12 +56,14 @@ export function CandidateComparisonPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <Link to={`/positions/${positionId}`} className="text-sm text-brand-600 hover:underline">
-          ← {t("common.back")}
-        </Link>
-        <h1 className="text-xl font-semibold text-slate-900">{t("comparison.title")}</h1>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: t("nav.positions"), to: "/positions" },
+          ...(position ? [{ label: position.title, to: `/positions/${positionId}` }] : []),
+          { label: t("comparison.title") },
+        ]}
+      />
+      <h1 className="text-xl font-semibold text-slate-900">{t("comparison.title")}</h1>
 
       <CompetencyComparisonChart items={items ?? []} competencies={competencies ?? []} names={names} />
 

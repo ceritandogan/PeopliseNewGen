@@ -7,13 +7,16 @@ import { CaseReportCard } from "../components/CaseReportCard";
 import { ConversationTranscriptCard } from "../components/ConversationTranscriptCard";
 import { ReviewerScoringCard } from "../components/ReviewerScoringCard";
 import { AICodeReviewCard } from "../components/AICodeReviewCard";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 import { useAddCandidateNote, useCandidateDetail, useSubmitEvaluation } from "../hooks/useCandidates";
+import { usePositionDashboard } from "../hooks/usePositions";
 import { useWorkflowStages } from "../hooks/useWorkflowStages";
 
 export function CandidateDetailPage() {
   const { t } = useTranslation();
   const { candidateProcessId } = useParams<{ candidateProcessId: string }>();
   const { data, isLoading } = useCandidateDetail(candidateProcessId);
+  const { data: position } = usePositionDashboard(data?.positionId);
   const addNote = useAddCandidateNote(candidateProcessId ?? "");
   const submitEvaluation = useSubmitEvaluation(candidateProcessId ?? "");
   const stages = useWorkflowStages(data?.positionId);
@@ -52,16 +55,28 @@ export function CandidateDetailPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <div className="flex flex-col gap-4 lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("candidateDetail.profile")}</CardTitle>
-            <Badge variant="brand">{data.status}</Badge>
-          </CardHeader>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="text-slate-500">Name</dt>
-            <dd className="text-slate-900">{data.candidateName}</dd>
+    <div className="flex flex-col gap-4">
+      <Breadcrumbs
+        items={[
+          { label: t("nav.positions"), to: "/positions" },
+          ...(position ? [{ label: position.title, to: `/positions/${data.positionId}` }] : []),
+          { label: data.candidateName },
+        ]}
+      />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-sm font-semibold text-brand-700">
+                  {data.candidateName.slice(0, 1).toUpperCase()}
+                </div>
+                <CardTitle>{data.candidateName}</CardTitle>
+              </div>
+              <Badge variant="brand">{data.status}</Badge>
+            </CardHeader>
+            <dl className="grid grid-cols-2 gap-2 text-sm">
             <dt className="text-slate-500">Email</dt>
             <dd className="text-slate-900">{data.candidateEmail}</dd>
             {data.currentStageId && (
@@ -165,6 +180,7 @@ export function CandidateDetailPage() {
             </Button>
           </div>
         </Card>
+      </div>
       </div>
     </div>
   );

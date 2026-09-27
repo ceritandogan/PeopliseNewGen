@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Button, Card, CardHeader, CardTitle, Input, Select, useToast } from "@peoplise/ui";
 import { toApiError, type CaseFlow, type CaseStepType } from "@peoplise/api-client";
 import { useAddFlow, useAddFlowStep, useCompetenciesForProject, useFlowsForProject } from "../hooks/useCases";
+import { usePositionDashboard } from "../hooks/usePositions";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const CASE_STEP_TYPES: CaseStepType[] = [
   "ShowMessage",
@@ -167,14 +169,19 @@ function AddFlowForm({ caseBotProjectId, isFirstFlow }: { caseBotProjectId: stri
 export function CaseFlowEditorPage() {
   const { t } = useTranslation();
   const { positionId, caseBotProjectId } = useParams<{ positionId: string; caseBotProjectId: string }>();
+  const { data: position } = usePositionDashboard(positionId);
   const { data: flows, isLoading } = useFlowsForProject(caseBotProjectId);
 
   return (
     <div className="flex flex-col gap-4">
+      <Breadcrumbs
+        items={[
+          { label: t("nav.positions"), to: "/positions" },
+          ...(position ? [{ label: position.title, to: `/positions/${positionId}` }] : []),
+          { label: t("positionDetail.caseQuestions") },
+        ]}
+      />
       <div className="flex flex-col gap-1">
-        <Link to={`/positions/${positionId}`} className="text-sm text-brand-600 hover:underline">
-          ← {t("common.back")}
-        </Link>
         <h1 className="text-xl font-semibold text-slate-900">{t("positionDetail.caseQuestions")}</h1>
         <p className="text-sm text-slate-500">{t("positionDetail.caseQuestionsHint")}</p>
       </div>

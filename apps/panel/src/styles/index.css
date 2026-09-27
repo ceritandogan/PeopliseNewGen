@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Tailwind's content auto-detection stops at this package's own boundary — without this,
+   any utility class used only inside @peoplise/ui's source (not also used verbatim
+   somewhere in apps/panel) never gets generated, so shared-component styles silently
+   fail to render even though the className is present in the DOM. */
+@source "../../../../packages/ui/src";
+
 /* Design tokens shared across the panel — same palette convention the candidate app uses, so a component moved between them doesn't need re-theming. */
 @theme {
   --color-brand-50: #eff6ff;

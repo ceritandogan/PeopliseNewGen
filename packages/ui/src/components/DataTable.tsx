@@ -27,12 +27,16 @@ export function DataTable<TRow>({
   onRowClick,
 }: DataTableProps<TRow>) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200">
-      <table className="w-full min-w-full divide-y divide-slate-200 text-sm">
-        <thead className="bg-slate-50">
+    <div className="overflow-x-auto rounded-xl border border-slate-100 shadow-sm">
+      <table className="w-full min-w-full divide-y divide-slate-100 text-sm">
+        <thead className="bg-slate-50/80">
           <tr>
             {columns.map((column) => (
-              <th key={column.key} scope="col" className="px-4 py-2 text-left font-medium text-slate-600">
+              <th
+                key={column.key}
+                scope="col"
+                className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500"
+              >
                 {column.header}
               </th>
             ))}
@@ -70,7 +74,7 @@ export function DataTable<TRow>({
                 className={cn(onRowClick && "cursor-pointer hover:bg-slate-50 focus-visible:bg-slate-50")}
               >
                 {columns.map((column) => (
-                  <td key={column.key} className={cn("px-4 py-2 text-slate-800", column.className)}>
+                  <td key={column.key} className={cn("px-4 py-3 text-slate-800", column.className)}>
                     {column.render(row)}
                   </td>
                 ))}

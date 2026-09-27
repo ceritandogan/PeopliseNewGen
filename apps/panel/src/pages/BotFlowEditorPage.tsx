@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Button, Card, CardHeader, CardTitle, Input, Select, useToast } from "@peoplise/ui";
+import { usePositionDashboard } from "../hooks/usePositions";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 import {
   toApiError,
   type BotConditionType,
@@ -441,15 +443,20 @@ function VariablesSection({ botProjectId, variables }: { botProjectId: string; v
 export function BotFlowEditorPage() {
   const { t } = useTranslation();
   const { positionId, botProjectId } = useParams<{ positionId: string; botProjectId: string }>();
+  const { data: position } = usePositionDashboard(positionId);
   const { data: flows, isLoading } = useFlowsForBotProject(botProjectId);
   const { data: variables } = useVariablesForProject(botProjectId);
 
   return (
     <div className="flex flex-col gap-4">
+      <Breadcrumbs
+        items={[
+          { label: t("nav.positions"), to: "/positions" },
+          ...(position ? [{ label: position.title, to: `/positions/${positionId}` }] : []),
+          { label: t("positionDetail.botScript") },
+        ]}
+      />
       <div className="flex flex-col gap-1">
-        <Link to={`/positions/${positionId}`} className="text-sm text-brand-600 hover:underline">
-          ← {t("common.back")}
-        </Link>
         <h1 className="text-xl font-semibold text-slate-900">{t("positionDetail.botScript")}</h1>
         <p className="text-sm text-slate-500">{t("positionDetail.botScriptHint")}</p>
       </div>
