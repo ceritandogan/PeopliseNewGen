@@ -313,6 +313,14 @@ export interface CandidateInterviewLink {
   url: string;
 }
 
+/** Any field not literally present in the pasted text comes back undefined, never guessed — see CandidatesController.ExtractFromText. */
+export interface CandidateProfileExtraction {
+  name?: string;
+  email?: string;
+  phone?: string;
+  resumeUrl?: string;
+}
+
 /** `links` is empty when the position has no configured project of either kind yet — a normal outcome, not an error. */
 export interface AddCandidateManuallyResponse {
   candidateProcessId: string;

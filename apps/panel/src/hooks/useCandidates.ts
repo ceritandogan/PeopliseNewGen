@@ -17,6 +17,13 @@ export function useCandidatePipeline(params: GetCandidatePipelineParams) {
   });
 }
 
+/** The "Aday ekle" form's optional LinkedIn-paste helper. Nothing to invalidate — extracts, doesn't persist. */
+export function useExtractCandidateProfile() {
+  return useMutation({
+    mutationFn: (pastedText: string) => candidatesApi.extractCandidateProfileFromText(pastedText),
+  });
+}
+
 /**
  * The Kanban board's drag-and-drop move. Optimistic: the card needs to relocate the
  * instant the drag ends, not after a round trip — `setQueriesData` (plural) patches every

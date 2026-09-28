@@ -17,7 +17,12 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Card, Badge, Button, Input, Modal, useToast, useAuth, cn } from "@peoplise/ui";
 import { toApiError, type AddCandidateManuallyResponse, type CandidatePipelineItem, type PipelineStatus } from "@peoplise/api-client";
-import { useAddCandidateManually, useCandidatePipeline, useSetCandidateStatus } from "../hooks/useCandidates";
+import {
+  useAddCandidateManually,
+  useCandidatePipeline,
+  useExtractCandidateProfile,
+  useSetCandidateStatus,
+} from "../hooks/useCandidates";
 import { usePositionDashboard } from "../hooks/usePositions";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { avatarColorFor, hashSeed } from "../lib/avatarColor";
@@ -533,19 +538,38 @@ function AddCandidateButton({ positionId }: { positionId: string }) {
   const { show } = useToast();
   const [isOpen, setOpen] = useState(false);
   const [result, setResult] = useState<AddCandidateManuallyResponse | null>(null);
+  const [pastedText, setPastedText] = useState("");
   const addCandidate = useAddCandidateManually(positionId);
+  const extractProfile = useExtractCandidateProfile();
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<AddCandidateForm>({ resolver: zodResolver(addCandidateSchema) });
 
   const close = () => {
     setOpen(false);
     setResult(null);
+    setPastedText("");
     reset();
+  };
+
+  const onExtract = async () => {
+    try {
+      const extraction = await extractProfile.mutateAsync(pastedText);
+      if (extraction.name) setValue("candidateName", extraction.name, { shouldValidate: true });
+      if (extraction.email) setValue("candidateEmail", extraction.email, { shouldValidate: true });
+      if (extraction.phone) setValue("candidatePhone", extraction.phone, { shouldValidate: true });
+      if (extraction.resumeUrl) setValue("resumeUrl", extraction.resumeUrl, { shouldValidate: true });
+      if (!extraction.name && !extraction.email && !extraction.phone && !extraction.resumeUrl) {
+        show(t("addCandidate.nothingExtracted") as string, "info");
+      }
+    } catch (error) {
+      show(toApiError(error).title, "error");
+    }
   };
 
   const onSubmit = handleSubmit(async (values) => {
@@ -585,6 +609,31 @@ function AddCandidateButton({ positionId }: { positionId: string }) {
           </div>
         ) : (
           <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
+            <div className="flex flex-col gap-1.5 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <label htmlFor="linkedin-paste" className="text-xs font-medium text-slate-600">
+                {t("addCandidate.pasteLabel")}
+              </label>
+              <textarea
+                id="linkedin-paste"
+                value={pastedText}
+                onChange={(event) => setPastedText(event.target.value)}
+                rows={3}
+                placeholder={t("addCandidate.pastePlaceholder") as string}
+                className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              />
+              <p className="text-xs text-slate-400">{t("addCandidate.pasteHint")}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-fit"
+                disabled={pastedText.trim().length < 20 || extractProfile.isPending}
+                onClick={onExtract}
+              >
+                {extractProfile.isPending ? t("common.loading") : t("addCandidate.extract")}
+              </Button>
+            </div>
+
             <Input label={t("addCandidate.name") as string} error={errors.candidateName?.message} {...register("candidateName")} />
             <Input
               label={t("addCandidate.email") as string}

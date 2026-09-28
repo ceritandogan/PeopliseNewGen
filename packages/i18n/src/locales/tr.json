@@ -213,7 +213,12 @@
     "botChatLink": "HR bot sohbet bağlantısı",
     "videoInterviewLink": "Video mülakat bağlantısı",
     "noLinksYet": "Bu pozisyon için henüz bir mülakat akışı yapılandırılmamış — önce bir video mülakat veya HR bot projesi ekleyin, ardından adayın sayfasından \"Bağlantıyı yeniden gönder\"i kullanın.",
-    "done": "Tamam"
+    "done": "Tamam",
+    "pasteLabel": "LinkedIn'den yapıştır (opsiyonel)",
+    "pastePlaceholder": "Adayın LinkedIn profilini açın, metni kopyalayın ve buraya yapıştırın",
+    "pasteHint": "LinkedIn profillerinde genellikle e-posta veya telefon numarası görünmez — bulunamazsa kendiniz girin.",
+    "extract": "Bilgileri ayıkla",
+    "nothingExtracted": "Bu metinden hiçbir bilgi ayıklanamadı — alanları kendiniz doldurun."
   },
   "candidateDetail": {
     "profile": "Profil",

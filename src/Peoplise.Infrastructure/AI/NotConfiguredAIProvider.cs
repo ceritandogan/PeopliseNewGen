@@ -19,6 +19,9 @@ public sealed class NotConfiguredAIProvider : IAIProvider
     public Task<CodeReviewResult> ReviewCodeAsync(string question, string candidateCode, CancellationToken cancellationToken = default) =>
         throw NotConfigured();
 
+    public Task<CandidateProfileExtraction> ExtractCandidateProfileAsync(string pastedText, CancellationToken cancellationToken = default) =>
+        throw NotConfigured();
+
     private static NotSupportedException NotConfigured() => new(
         "No AI provider is configured. Implement IAIProvider against Azure OpenAI, OpenAI, "
         + "or Claude and register it in DependencyInjection.AddInfrastructure in place of "

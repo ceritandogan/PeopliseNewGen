@@ -120,6 +120,19 @@ public sealed class CandidatesController : ControllerBase
         return result.ToActionResult(this);
     }
 
+    /// <summary>
+    /// The "Aday ekle" form's optional LinkedIn-paste helper — see
+    /// ExtractCandidateProfileFromTextCommand's remarks for why this is named a command
+    /// and never fetches LinkedIn itself. No role check: same reasoning as the rest of
+    /// this controller.
+    /// </summary>
+    [HttpPost("extract-from-text")]
+    public async Task<IActionResult> ExtractFromText(ExtractFromTextRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new ExtractCandidateProfileFromTextCommand(request.PastedText), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
     /// <summary>Panel-facing bulk name lookup for raw candidate ids — see GetCandidateNamesQuery's remarks.</summary>
     [HttpGet("names")]
     public async Task<IActionResult> GetNames([FromQuery] Guid positionId, [FromQuery] Guid[] candidateIds, CancellationToken cancellationToken)
@@ -213,6 +226,8 @@ public sealed class CandidatesController : ControllerBase
     }
 
     public sealed record SetStatusRequest(PipelineStatus Status);
+
+    public sealed record ExtractFromTextRequest(string PastedText);
 
     /// <summary>No AuthorId here — deliberately: it's derived server-side from the caller's access token. See AddNote.</summary>
     public sealed record AddNoteRequest(string Text, bool IsPrivate);

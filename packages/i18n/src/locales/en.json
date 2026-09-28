@@ -213,7 +213,12 @@
     "botChatLink": "HR bot chat link",
     "videoInterviewLink": "Video interview link",
     "noLinksYet": "No interview flow is configured for this position yet — add a video interview or HR bot project first, then use \"Resend link\" from the candidate's page.",
-    "done": "Done"
+    "done": "Done",
+    "pasteLabel": "Paste from LinkedIn (optional)",
+    "pastePlaceholder": "Open the candidate's LinkedIn profile, copy the text, and paste it here",
+    "pasteHint": "LinkedIn profiles usually don't show an email or phone number — fill those in yourself if they're not found.",
+    "extract": "Extract info",
+    "nothingExtracted": "Nothing could be extracted from that text — fill in the fields below yourself."
   },
   "candidateDetail": {
     "profile": "Profile",
