@@ -7,6 +7,7 @@ using Peoplise.Infrastructure.Security;
 using Peoplise.Modules.ATS.Application.Candidates.Commands;
 using Peoplise.Modules.ATS.Application.Candidates.Queries;
 using Peoplise.Modules.ATS.Application.Positions.Queries;
+using Peoplise.Modules.ATS.Domain.ValueObjects;
 using Peoplise.Modules.HrBot.Application.Conversations.Commands;
 using Peoplise.Modules.HrBot.Domain.ValueObjects;
 using Peoplise.Modules.VideoInterview.Application.Cases.Commands;
@@ -64,6 +65,19 @@ public sealed class CandidatesController : ControllerBase
 
         var result = await _mediator.Send(command, cancellationToken);
         return result.IsSuccess ? Ok(new { id = result.Value }) : result.ToActionResult(this);
+    }
+
+    /// <summary>
+    /// The Kanban board's drag-and-drop move — see <see cref="SetCandidateStatusCommand"/>'s
+    /// remarks for why this is deliberately permissive. No role check: same "no role
+    /// administration exists yet" reasoning as the rest of this controller.
+    /// </summary>
+    [HttpPut("{candidateProcessId:guid}/status")]
+    public async Task<IActionResult> SetStatus(Guid candidateProcessId, SetStatusRequest request, CancellationToken cancellationToken)
+    {
+        var command = new SetCandidateStatusCommand(candidateProcessId, request.Status);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult(this);
     }
 
     /// <summary>
@@ -197,6 +211,8 @@ public sealed class CandidatesController : ControllerBase
 
         return new CandidateInterviewLink("video-interview", url);
     }
+
+    public sealed record SetStatusRequest(PipelineStatus Status);
 
     /// <summary>No AuthorId here — deliberately: it's derived server-side from the caller's access token. See AddNote.</summary>
     public sealed record AddNoteRequest(string Text, bool IsPrivate);

@@ -1,12 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useParams, useSearchParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import {
+  DndContext,
+  useDraggable,
+  useDroppable,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { Card, Badge, Button, Input, Modal, useToast, useAuth, cn } from "@peoplise/ui";
 import { toApiError, type AddCandidateManuallyResponse, type CandidatePipelineItem, type PipelineStatus } from "@peoplise/api-client";
-import { useAddCandidateManually, useCandidatePipeline } from "../hooks/useCandidates";
+import { useAddCandidateManually, useCandidatePipeline, useSetCandidateStatus } from "../hooks/useCandidates";
 import { usePositionDashboard } from "../hooks/usePositions";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { avatarColorFor, hashSeed } from "../lib/avatarColor";
@@ -18,6 +29,7 @@ export const BOARD_STATUSES: PipelineStatus[] = [
   "Interviewing",
   "Offer",
   "Accepted",
+  "Rejected",
 ];
 
 const HIGHLIGHT_DURATION_MS = 2500;
@@ -120,10 +132,16 @@ export function CandidatePipelinePage() {
   const { positionId } = useParams<{ positionId: string }>();
   const { data, isLoading } = useCandidatePipeline({ positionId: positionId ?? "", pageSize: 100 });
   const { data: position } = usePositionDashboard(positionId);
+  const setStatus = useSetCandidateStatus();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<PipelineTab>("applicants");
   const columnRefs = useRef<Partial<Record<PipelineStatus, HTMLElement | null>>>({});
+
+  const dragSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor),
+  );
 
   const requestedStatus = searchParams.get("status") as PipelineStatus | null;
   const [highlightedStatus, setHighlightedStatus] = useState<PipelineStatus | null>(
@@ -143,6 +161,21 @@ export function CandidatePipelinePage() {
   const selectTab = (value: PipelineTab) => {
     setTab(value);
     if (value !== "applicants") notImplemented();
+  };
+
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const candidateProcessId = String(active.id);
+    const targetStatus = over.id as PipelineStatus;
+    const current = data?.items.find((item) => item.candidateProcessId === candidateProcessId)?.status;
+    if (!current || current === targetStatus) return;
+
+    setStatus.mutate(
+      { candidateProcessId, status: targetStatus },
+      { onError: (error) => show(toApiError(error).title, "error") },
+    );
   };
 
   const byStatus = new Map<PipelineStatus, CandidatePipelineItem[]>();
@@ -300,103 +333,128 @@ export function CandidatePipelinePage() {
           {isLoading ? (
             <p className="text-sm text-slate-500">{t("common.loading")}</p>
           ) : (
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {BOARD_STATUSES.map((status) => {
-                const items = (byStatus.get(status) ?? []).filter((item) =>
-                  normalizeForSearch(item.candidateName).includes(query),
-                );
-                return (
-                  <section
-                    key={status}
-                    ref={(node) => {
-                      columnRefs.current[status] = node;
-                    }}
-                    aria-label={t(STATUS_LABEL_KEY[status])}
-                    className={cn(
-                      "w-72 shrink-0 rounded-md transition-shadow duration-300",
-                      status === highlightedStatus && "ring-2 ring-brand-500",
-                    )}
-                  >
-                    <h2 className="mb-2 flex items-center justify-between text-sm font-medium text-slate-600">
-                      <span className="flex items-center gap-2">
-                        <span className={cn("h-2 w-2 rounded-full", STATUS_DOT_COLOR[status])} aria-hidden="true" />
-                        {t(STATUS_LABEL_KEY[status])}
-                        <Badge variant="neutral">{items.length}</Badge>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={notImplemented}
-                        title={t("pipeline.aiSummary") as string}
-                        aria-label={t("pipeline.aiSummary") as string}
-                        className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
-                      >
-                        ✨
-                      </button>
-                    </h2>
-                    <ul className="flex flex-col gap-2">
-                      {items.map((item) => {
-                        const meta = fakeCandidateMeta(item.candidateProcessId);
-                        return (
-                          <li key={item.candidateProcessId}>
-                            <Link to={`/candidates/${item.candidateProcessId}`}>
-                              <Card className="flex flex-col gap-2.5 p-3 transition-shadow hover:border-brand-300 hover:shadow-md">
-                                <div className="flex items-center gap-2.5">
-                                  <div
-                                    className={cn(
-                                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                                      avatarColorFor(item.candidateName),
-                                    )}
-                                    aria-hidden="true"
-                                  >
-                                    {item.candidateName.slice(0, 1).toUpperCase()}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="truncate text-sm font-medium text-slate-900">{item.candidateName}</p>
-                                    <p className="text-xs text-slate-500">{t(meta.levelKey)}</p>
-                                  </div>
-                                </div>
-
-                                <div className="flex flex-col gap-1 border-t border-slate-100 pt-2 text-xs text-slate-500">
-                                  <span className="flex items-center gap-1.5">
-                                    <ClockIcon />
-                                    {t("pipeline.yearsExperience", { count: meta.experienceYears })}
-                                  </span>
-                                  <span className="flex items-center gap-1.5">
-                                    <BuildingIcon />
-                                    {t("pipeline.exEmployer", { company: meta.company })}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center justify-between text-xs text-slate-400">
-                                  <span>{t("pipeline.hoursAgo", { count: meta.hoursAgo })}</span>
-                                  <span className="flex items-center gap-2.5">
-                                    {meta.attachments > 0 && (
-                                      <span className="flex items-center gap-1">
-                                        <PaperclipIcon />
-                                        {meta.attachments}
-                                      </span>
-                                    )}
-                                    <span className="flex items-center gap-1">
-                                      <CommentIcon />
-                                      {meta.comments}
-                                    </span>
-                                  </span>
-                                </div>
-                              </Card>
-                            </Link>
-                          </li>
-                        );
-                      })}
-                      {items.length === 0 && <li className="text-xs text-slate-400">{t("common.noResults")}</li>}
-                    </ul>
-                  </section>
-                );
-              })}
-            </div>
+            <DndContext sensors={dragSensors} onDragEnd={onDragEnd}>
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {BOARD_STATUSES.map((status) => {
+                  const items = (byStatus.get(status) ?? []).filter((item) =>
+                    normalizeForSearch(item.candidateName).includes(query),
+                  );
+                  return (
+                    <section
+                      key={status}
+                      ref={(node) => {
+                        columnRefs.current[status] = node;
+                      }}
+                      aria-label={t(STATUS_LABEL_KEY[status])}
+                      className={cn(
+                        "w-72 shrink-0 rounded-md transition-shadow duration-300",
+                        status === highlightedStatus && "ring-2 ring-brand-500",
+                      )}
+                    >
+                      <h2 className="mb-2 flex items-center justify-between text-sm font-medium text-slate-600">
+                        <span className="flex items-center gap-2">
+                          <span className={cn("h-2 w-2 rounded-full", STATUS_DOT_COLOR[status])} aria-hidden="true" />
+                          {t(STATUS_LABEL_KEY[status])}
+                          <Badge variant="neutral">{items.length}</Badge>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={notImplemented}
+                          title={t("pipeline.aiSummary") as string}
+                          aria-label={t("pipeline.aiSummary") as string}
+                          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
+                        >
+                          ✨
+                        </button>
+                      </h2>
+                      <DroppableColumn status={status}>
+                        {items.map((item) => (
+                          <DraggableCandidateCard key={item.candidateProcessId} item={item} />
+                        ))}
+                        {items.length === 0 && <li className="text-xs text-slate-400">{t("common.noResults")}</li>}
+                      </DroppableColumn>
+                    </section>
+                  );
+                })}
+              </div>
+            </DndContext>
           )}
         </>
       )}
     </div>
+  );
+}
+
+function DroppableColumn({ status, children }: { status: PipelineStatus; children: ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+
+  return (
+    <ul ref={setNodeRef} className={cn("flex min-h-16 flex-col gap-2 rounded-md p-1 transition-colors", isOver && "bg-brand-50")}>
+      {children}
+    </ul>
+  );
+}
+
+function DraggableCandidateCard({ item }: { item: CandidatePipelineItem }) {
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.candidateProcessId });
+  const meta = fakeCandidateMeta(item.candidateProcessId);
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={transform ? { transform: CSS.Translate.toString(transform) } : undefined}
+      className={cn("touch-none", isDragging && "opacity-50")}
+      {...listeners}
+      {...attributes}
+    >
+      <Link to={`/candidates/${item.candidateProcessId}`}>
+        <Card className="flex flex-col gap-2.5 p-3 transition-shadow hover:border-brand-300 hover:shadow-md">
+          <div className="flex items-center gap-2.5">
+            <div
+              className={cn(
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+                avatarColorFor(item.candidateName),
+              )}
+              aria-hidden="true"
+            >
+              {item.candidateName.slice(0, 1).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-slate-900">{item.candidateName}</p>
+              <p className="text-xs text-slate-500">{t(meta.levelKey)}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1 border-t border-slate-100 pt-2 text-xs text-slate-500">
+            <span className="flex items-center gap-1.5">
+              <ClockIcon />
+              {t("pipeline.yearsExperience", { count: meta.experienceYears })}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <BuildingIcon />
+              {t("pipeline.exEmployer", { company: meta.company })}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-slate-400">
+            <span>{t("pipeline.hoursAgo", { count: meta.hoursAgo })}</span>
+            <span className="flex items-center gap-2.5">
+              {meta.attachments > 0 && (
+                <span className="flex items-center gap-1">
+                  <PaperclipIcon />
+                  {meta.attachments}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <CommentIcon />
+                {meta.comments}
+              </span>
+            </span>
+          </div>
+        </Card>
+      </Link>
+    </li>
   );
 }
 

@@ -137,4 +137,50 @@ public class CandidateProcessTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("CandidateProcess.AlreadyClosed");
     }
+
+    [Fact]
+    public void SetStatus_moves_freely_to_any_board_status()
+    {
+        var process = CreateProcess();
+
+        var result = process.SetStatus(PipelineStatus.Interviewing);
+
+        result.IsSuccess.Should().BeTrue();
+        process.Status.Should().Be(PipelineStatus.Interviewing);
+    }
+
+    [Fact]
+    public void SetStatus_refuses_Eliminated_as_a_manual_target()
+    {
+        var process = CreateProcess();
+
+        var result = process.SetStatus(PipelineStatus.Eliminated);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("CandidateProcess.InvalidManualStatus");
+        process.Status.Should().Be(PipelineStatus.NewApplication, "a refused status change must not have moved the process");
+    }
+
+    [Fact]
+    public void SetStatus_refuses_TimedOut_as_a_manual_target()
+    {
+        var process = CreateProcess();
+
+        var result = process.SetStatus(PipelineStatus.TimedOut);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("CandidateProcess.InvalidManualStatus");
+    }
+
+    [Fact]
+    public void SetStatus_can_reverse_a_terminal_Accepted_or_Rejected_status_unlike_the_automatic_terminal_state_guard()
+    {
+        var process = CreateProcess();
+        process.SetStatus(PipelineStatus.Accepted);
+
+        var result = process.SetStatus(PipelineStatus.UnderReview);
+
+        result.IsSuccess.Should().BeTrue();
+        process.Status.Should().Be(PipelineStatus.UnderReview);
+    }
 }

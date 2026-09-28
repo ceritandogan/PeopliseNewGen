@@ -231,6 +231,30 @@ public sealed class CandidateProcess : AggregateRoot<CandidateProcessId>, IHasTe
         return Result.Success();
     }
 
+    /// <summary>
+    /// Manual, HR-driven move to any pipeline status — the Kanban board's own
+    /// drag-and-drop action. Deliberately permissive: no forward-only/adjacent-only
+    /// constraint, and — unlike <see cref="MoveToNextStage"/>/<see cref="Eliminate"/>/
+    /// <see cref="Accept"/>/<see cref="MarkTimedOut"/> — not blocked once already
+    /// Accepted/Rejected, so a mis-drop is correctable, since this is a manual board
+    /// action rather than the automatic rule engine those guard. Still refuses
+    /// <see cref="PipelineStatus.Eliminated"/>/<see cref="PipelineStatus.TimedOut"/> as a
+    /// target: those stay exclusively rule-engine/KVKK-retention-driven, never a manual
+    /// board move — a genuinely separate axis from <see cref="WorkflowDefinition"/> Stage
+    /// progression (see <c>TransitionCandidateStageCommand</c>'s own remarks).
+    /// </summary>
+    public Result SetStatus(PipelineStatus status)
+    {
+        if (status is PipelineStatus.Eliminated or PipelineStatus.TimedOut)
+        {
+            return Result.Failure(Error.Validation(
+                "CandidateProcess.InvalidManualStatus", $"'{status}' cannot be set manually — it's only ever reached automatically."));
+        }
+
+        Status = status;
+        return Result.Success();
+    }
+
     public void AddNote(string authorId, string text, bool isPrivate, DateTimeOffset createdAt) =>
         _notes.Add(new CandidateNote(Guid.NewGuid(), authorId, text, isPrivate, createdAt));
 

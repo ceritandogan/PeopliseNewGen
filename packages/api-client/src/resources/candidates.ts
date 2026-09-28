@@ -58,6 +58,11 @@ export async function submitEvaluation(candidateProcessId: string, request: Subm
   await httpClient.post(`/api/candidates/${candidateProcessId}/evaluations`, request);
 }
 
+/** The Kanban board's drag-and-drop move — see CandidatesController.SetStatus's remarks. */
+export async function setCandidateStatus(candidateProcessId: string, status: PipelineStatus): Promise<void> {
+  await httpClient.put(`/api/candidates/${candidateProcessId}/status`, { status });
+}
+
 /** No authorId here — deliberately: it's derived server-side from the caller's access token. See CandidatesController.AddNote. */
 export async function addCandidateNote(
   candidateProcessId: string,
