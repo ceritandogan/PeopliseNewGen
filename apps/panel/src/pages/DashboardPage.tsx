@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { Card, Badge, cn } from "@peoplise/ui";
 import { usePositionsList } from "../hooks/usePositions";
+import { avatarColorFor } from "../lib/avatarColor";
 
 /**
  * No position lifecycle/status exists yet (see CONTEXT.md), so this lists every
@@ -10,20 +11,6 @@ import { usePositionsList } from "../hooks/usePositions";
  * design notes for why the total-applicants card relies on that.
  */
 const DASHBOARD_PAGE_SIZE = 200;
-
-const AVATAR_COLORS = [
-  "bg-brand-100 text-brand-700",
-  "bg-violet-100 text-violet-700",
-  "bg-amber-100 text-amber-700",
-  "bg-emerald-100 text-emerald-700",
-  "bg-pink-100 text-pink-700",
-  "bg-sky-100 text-sky-700",
-];
-
-function avatarColorFor(seed: string) {
-  const hash = [...seed].reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
 
 export function DashboardPage() {
   const { t } = useTranslation();
