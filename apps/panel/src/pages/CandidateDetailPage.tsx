@@ -113,7 +113,7 @@ export function CandidateDetailPage() {
               <li key={index} className="relative">
                 <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-brand-500" aria-hidden />
                 <p className="text-sm font-medium text-slate-900">
-                  {evaluation.evaluatorId} — {evaluation.score}/100
+                  {evaluation.evaluatorEmail} — {evaluation.score}/100
                 </p>
                 {evaluation.comments && <p className="text-sm text-slate-600">{evaluation.comments}</p>}
                 <p className="text-xs text-slate-400">{new Date(evaluation.submittedAt).toLocaleString()}</p>

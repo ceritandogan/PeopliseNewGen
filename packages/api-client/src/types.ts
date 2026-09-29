@@ -87,9 +87,11 @@ export interface CandidateNoteDetail {
   createdAt: string;
 }
 
+/** `evaluatorId` is a stable internal id, not for display — use `evaluatorEmail`. See GetCandidateDetailQuery's remarks. */
 export interface CandidateEvaluationDetail {
   stageId: string;
   evaluatorId: string;
+  evaluatorEmail: string;
   score: number;
   comments: string | null;
   submittedAt: string;
