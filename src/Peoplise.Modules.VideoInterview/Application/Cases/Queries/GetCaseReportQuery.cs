@@ -49,7 +49,8 @@ public sealed class GetCaseReportQueryHandler : IRequestHandler<GetCaseReportQue
         if (project is null)
             return Result.Failure<CaseReportDto>(Error.NotFound("CaseBotProject.NotFound", "The case's project could not be found."));
 
-        var report = @case.GenerateReport(project.ReportTemplate, DateTimeOffset.UtcNow);
+        var competencyNames = project.Competencies.ToDictionary(c => c.Id, c => c.Name);
+        var report = @case.GenerateReport(project.ReportTemplate, competencyNames, DateTimeOffset.UtcNow);
 
         return Result.Success(ToDto(request.CaseId, report.GeneratedAt, report.Sections));
     }

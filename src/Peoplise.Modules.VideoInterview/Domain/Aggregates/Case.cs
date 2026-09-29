@@ -277,13 +277,21 @@ public sealed class Case : AggregateRoot<CaseId>, IHasTenant, IAuditableEntity
         CandidateId = Guid.Empty;
     }
 
-    public Report GenerateReport(ReportTemplate template, DateTimeOffset generatedAt)
+    /// <summary>
+    /// <paramref name="competencyNames"/> resolves each result's <c>CompetencyId</c> to a
+    /// display name — <see cref="Case"/> only ever sees raw competency ids (via
+    /// <see cref="SubmitScoring"/>'s caller-supplied <c>competencyId</c>), never the
+    /// <c>Competency</c> entities themselves, which live on the sibling
+    /// <c>CaseBotProject</c> aggregate; the caller (<c>GetCaseReportQueryHandler</c>,
+    /// which already loads that project) builds the lookup.
+    /// </summary>
+    public Report GenerateReport(ReportTemplate template, IReadOnlyDictionary<Guid, string> competencyNames, DateTimeOffset generatedAt)
     {
         var report = new Report(Guid.NewGuid(), template.Id, generatedAt);
 
         foreach (var section in template.Sections)
         {
-            var content = BuildSectionContent(section.Title);
+            var content = BuildSectionContent(section.Title, competencyNames);
             report.AddSection(new ReportSectionContent(Guid.NewGuid(), section.Id, section.Title, content));
         }
 
@@ -291,7 +299,7 @@ public sealed class Case : AggregateRoot<CaseId>, IHasTenant, IAuditableEntity
         return report;
     }
 
-    private string BuildSectionContent(string sectionTitle)
+    private string BuildSectionContent(string sectionTitle, IReadOnlyDictionary<Guid, string> competencyNames)
     {
         var isCompetencySection = sectionTitle.Contains("competenc", StringComparison.OrdinalIgnoreCase)
             || sectionTitle.Contains("yetkinlik", StringComparison.OrdinalIgnoreCase);
@@ -301,7 +309,12 @@ public sealed class Case : AggregateRoot<CaseId>, IHasTenant, IAuditableEntity
             var currentResults = GetCurrentCompetencyResults();
             if (currentResults.Count > 0)
             {
-                var lines = currentResults.Select(r => $"{r.CompetencyId}: {r.Score:0.##}/100");
+                // Falls back to the raw id only if it's genuinely missing from the
+                // project's own competency list (shouldn't happen in practice — scoring
+                // only ever offers competencies that already exist — but a display glitch
+                // beats a thrown exception here).
+                var lines = currentResults.Select(r =>
+                    $"{competencyNames.GetValueOrDefault(r.CompetencyId, r.CompetencyId.ToString())}: {r.Score:0.##}/100");
                 return string.Join(Environment.NewLine, lines);
             }
         }

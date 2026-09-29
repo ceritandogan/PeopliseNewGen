@@ -17,14 +17,14 @@ public class ReportGenerationTests
         template.AddSection("Competency Scores", order: 1);
         template.AddSection("Recommendations", order: 2);
 
-        var report = @case.GenerateReport(template, DateTimeOffset.UtcNow);
+        var report = @case.GenerateReport(template, new Dictionary<Guid, string>(), DateTimeOffset.UtcNow);
 
         report.Sections.Should().HaveCount(3);
         report.Sections.Select(s => s.Title).Should().BeEquivalentTo(["Summary", "Competency Scores", "Recommendations"]);
     }
 
     [Fact]
-    public void A_competency_section_is_filled_with_the_computed_scores_when_the_case_has_a_result()
+    public void A_competency_section_shows_the_resolved_name_not_the_raw_id_when_the_case_has_a_result()
     {
         var @case = Case.Start(CaseBotProjectId.New(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow);
         var competencyId = Guid.NewGuid();
@@ -34,11 +34,28 @@ public class ReportGenerationTests
         var template = new ReportTemplate(Guid.NewGuid(), "Standard Report");
         template.AddSection("Competency Scores", order: 0);
 
-        var report = @case.GenerateReport(template, DateTimeOffset.UtcNow);
+        var report = @case.GenerateReport(template, new Dictionary<Guid, string> { [competencyId] = "Problem Solving" }, DateTimeOffset.UtcNow);
 
         var section = report.Sections.Single();
-        section.Content.Should().Contain(competencyId.ToString());
+        section.Content.Should().Contain("Problem Solving");
         section.Content.Should().Contain("90");
+        section.Content.Should().NotContain(competencyId.ToString(), "the resolved name should replace the raw id, not sit alongside it");
+    }
+
+    [Fact]
+    public void A_competency_section_falls_back_to_the_raw_id_if_the_competency_is_genuinely_missing_from_the_lookup()
+    {
+        var @case = Case.Start(CaseBotProjectId.New(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow);
+        var competencyId = Guid.NewGuid();
+        @case.SubmitScoring("reviewer-1", Guid.NewGuid(), competencyId, 90, DateTimeOffset.UtcNow);
+        @case.Complete(DateTimeOffset.UtcNow);
+
+        var template = new ReportTemplate(Guid.NewGuid(), "Standard Report");
+        template.AddSection("Competency Scores", order: 0);
+
+        var report = @case.GenerateReport(template, new Dictionary<Guid, string>(), DateTimeOffset.UtcNow);
+
+        report.Sections.Single().Content.Should().Contain(competencyId.ToString());
     }
 
     [Fact]
@@ -48,7 +65,7 @@ public class ReportGenerationTests
         var template = new ReportTemplate(Guid.NewGuid(), "Standard Report");
         template.AddSection("Yetkinlik Özeti", order: 0);
 
-        var report = @case.GenerateReport(template, DateTimeOffset.UtcNow);
+        var report = @case.GenerateReport(template, new Dictionary<Guid, string>(), DateTimeOffset.UtcNow);
 
         report.Sections.Single().Content.Should().Contain("No competency scores available");
     }
